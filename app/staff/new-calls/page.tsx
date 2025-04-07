@@ -195,20 +195,10 @@ export default function NewCallsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">New Calls</h1>
-        {selectedCalls.length > 0 && (
-          <Button onClick={() => setShowAssignConfirm(true)}>
-            Assign {selectedCalls.length} Call{selectedCalls.length > 1 ? "s" : ""} to Me
-          </Button>
-        )}
-      </div>
-
       {/* Call Table */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>New Calls</CardTitle>
-          <CardDescription>Assign new customer calls to yourself.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between sticky top-0 bg-background z-10 py-2">
@@ -222,91 +212,233 @@ export default function NewCallsPage() {
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {/* Status Filter */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Status {statusFilter !== "all" && `(${statusFilter})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter("New")}>New</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter("In Progress")}>In Progress</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter("Closed")}>Closed</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter("Sold")}>Sold</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Tags Filter - Separate Dropdowns */}
+{/* Course Dropdown */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Filter className="mr-2 h-4 w-4" />
+      Course {tagFilters.length > 0 && `(${tagFilters.length})`}
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Filter by Course</DropdownMenuLabel>
+    <DropdownMenuItem onClick={() => toggleTagFilter('ca-final')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('ca-final') && <Check className="h-3 w-3" />}
+        </div>
+        CA Final
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('ca-inter')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('ca-inter') && <Check className="h-3 w-3" />}
+        </div>
+        CA Inter
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('ca-foundation')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('ca-foundation') && <Check className="h-3 w-3" />}
+        </div>
+        CA Foundation
+      </div>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
-              {/* Source Filter */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Sources {sourceFilters.length > 0 && `(${sourceFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Source</DropdownMenuLabel>
-                  {sources.map((source) => (
-                    <DropdownMenuItem key={source} onClick={() => toggleSourceFilter(source)}>
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 border rounded flex items-center justify-center">
-                          {sourceFilters.includes(source) && <Check className="h-3 w-3" />}
-                        </div>
-                        {source}
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                  {sourceFilters.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setSourceFilters([])}>Clear Source Filters</DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+{/* Term Dropdown */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Filter className="mr-2 h-4 w-4" />
+      Term {tagFilters.length > 0 && `(${tagFilters.length})`}
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Filter by Term</DropdownMenuLabel>
+    <DropdownMenuItem onClick={() => toggleTagFilter('may-2025')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('may-2025') && <Check className="h-3 w-3" />}
+        </div>
+        May 2025
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('nov-2025')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('nov-2025') && <Check className="h-3 w-3" />}
+        </div>
+        Nov 2025
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('may-2026')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('may-2026') && <Check className="h-3 w-3" />}
+        </div>
+        May 2026
+      </div>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
-              {/* Tags Filter */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Tags {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
-                  <div className="max-h-[300px] overflow-auto p-1">
-                    {allTags.map((tag) => (
-                      <DropdownMenuItem key={tag} onClick={() => toggleTagFilter(tag)}>
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 border rounded flex items-center justify-center">
-                            {tagFilters.includes(tag) && <Check className="h-3 w-3" />}
-                          </div>
-                          {tag}
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                  {tagFilters.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setTagFilters([])}>Clear Tag Filters</DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+{/* Subject Dropdown */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Filter className="mr-2 h-4 w-4" />
+      Subject {tagFilters.length > 0 && `(${tagFilters.length})`}
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Filter by Subject</DropdownMenuLabel>
+    <DropdownMenuItem onClick={() => toggleTagFilter('accounts')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('accounts') && <Check className="h-3 w-3" />}
+        </div>
+        Accounts
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('law')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('law') && <Check className="h-3 w-3" />}
+        </div>
+        Law
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('taxation')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('taxation') && <Check className="h-3 w-3" />}
+        </div>
+        Taxation
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('audit')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('audit') && <Check className="h-3 w-3" />}
+        </div>
+        Audit
+      </div>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
-              {/* Clear All Filters */}
-              {(searchQuery || statusFilter !== "all" || sourceFilters.length > 0 || tagFilters.length > 0) && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X className="mr-2 h-4 w-4" />
-                  Clear Filters
-                </Button>
-              )}
+{/* Custom Tag 1 Dropdown */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Filter className="mr-2 h-4 w-4" />
+      Custom Tag 1 {tagFilters.length > 0 && `(${tagFilters.length})`}
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Filter by Custom Tag 1</DropdownMenuLabel>
+    <DropdownMenuItem onClick={() => toggleTagFilter('scholarship')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('scholarship') && <Check className="h-3 w-3" />}
+        </div>
+        Scholarship
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('faculty')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('faculty') && <Check className="h-3 w-3" />}
+        </div>
+        Faculty
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('emi')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('emi') && <Check className="h-3 w-3" />}
+        </div>
+        EMI
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('transfer')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('transfer') && <Check className="h-3 w-3" />}
+        </div>
+        Transfer
+      </div>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
+{/* Custom Tag 2 Dropdown */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm">
+      <Filter className="mr-2 h-4 w-4" />
+      Custom Tag 2 {tagFilters.length > 0 && `(${tagFilters.length})`}
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Filter by Custom Tag 2</DropdownMenuLabel>
+    <DropdownMenuItem onClick={() => toggleTagFilter('weekend-batch')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('weekend-batch') && <Check className="h-3 w-3" />}
+        </div>
+        Weekend Batch
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('exam-pattern')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('exam-pattern') && <Check className="h-3 w-3" />}
+        </div>
+        Exam Pattern
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('study-material')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('study-material') && <Check className="h-3 w-3" />}
+        </div>
+        Study Material
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('batch-start')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('batch-start') && <Check className="h-3 w-3" />}
+        </div>
+        Batch Start
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => toggleTagFilter('placement')}>
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 border rounded flex items-center justify-center">
+          {tagFilters.includes('placement') && <Check className="h-3 w-3" />}
+        </div>
+        Placement
+      </div>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
+
+                      {/* Clear All Filters */}
+                      {(searchQuery || statusFilter !== "all" || sourceFilters.length > 0 || tagFilters.length > 0) && (
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
+                          <X className="mr-2 h-4 w-4" />
+                          Clear Filters
+                        </Button>
+                      )}
+               
             </div>
           </div>
 
@@ -329,10 +461,8 @@ export default function NewCallsPage() {
                     <TableHead>Customer Name</TableHead>
                     <TableHead>Phone Number</TableHead>
                     <TableHead className="w-[40%]">Query</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Tags</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -361,9 +491,6 @@ export default function NewCallsPage() {
                         <TableCell className="max-w-[400px]">
                           <div className="line-clamp-2">{call.query}</div>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(call.status)}>{call.status}</Badge>
-                        </TableCell>
                         <TableCell>{call.source}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
@@ -377,23 +504,6 @@ export default function NewCallsPage() {
                                 +{call.tags.length - 2}
                               </Badge>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/staff/calls/${call.id}`}>View</Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedCalls([call.id])
-                                setShowAssignConfirm(true)
-                              }}
-                            >
-                              Assign to Me
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
