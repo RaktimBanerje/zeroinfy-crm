@@ -334,11 +334,10 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
-          <Card className="border-l-4 border-l-blue-500" style={{backgroundColor: '#f1f1f1'}}>
+          <Card style={{ backgroundColor: '#dbeafe' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
                 <CardTitle>Customer Information</CardTitle>
-                <CardDescription>Details about the customer and their query</CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
                 {isEditing ? (
@@ -603,10 +602,9 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500" style={{backgroundColor: '#f1f1f1'}}>
+          <Card style={{ backgroundColor: '#fef9c3' }}>
             <CardHeader>
               <CardTitle>Interaction History</CardTitle>
-              <CardDescription>Previous interactions with this customer</CardDescription>
             </CardHeader>
             <CardContent>
               {interactions.length === 0 ? (
@@ -642,10 +640,9 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
         </div>
 
         <div>
-          <Card className="border-l-4 border-l-yellow-500 sticky top-6" style={{backgroundColor: '#f1f1f1'}}>
+          <Card className="sticky top-6" style={{ backgroundColor: '#dcfce7' }}>
             <CardHeader>
               <CardTitle>Add Interaction</CardTitle>
-              <CardDescription>Update the customer's status and add notes</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -683,13 +680,13 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Next Follow-up Date & Time</label>
                   <div className="relative">
-                  <input
-                    type="datetime-local"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={nextFollowUpDate ? nextFollowUpDate.toISOString().slice(0, 16) : ""}
-                    onChange={(e) => setNextFollowUpDate(e.target.value ? new Date(e.target.value) : undefined)}
-                    min={new Date().toISOString().slice(0, 16)} // Ensures the minimum is the current date and time
-                  />
+                    <input
+                      type="datetime-local"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={nextFollowUpDate ? nextFollowUpDate.toISOString().slice(0, 16) : ""}
+                      onChange={(e) => setNextFollowUpDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      min={new Date().toISOString().slice(0, 16)} // Ensures the minimum is the current date and time
+                    />
                   </div>
                 </div>
 

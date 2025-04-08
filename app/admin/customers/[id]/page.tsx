@@ -374,7 +374,6 @@ export default function CustomerDetail({ params }: { params: { id: string } }) {
           <Card>
             <CardHeader>
               <CardTitle>Customer Information</CardTitle>
-              <CardDescription>View and manage customer details.</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="details">

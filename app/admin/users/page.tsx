@@ -185,7 +185,6 @@ export default function UsersPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Users</CardTitle>
-          <CardDescription>Manage staff and admin users of the CRM system.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex items-center gap-2">

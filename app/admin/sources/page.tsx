@@ -166,7 +166,6 @@ export default function SourcesPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Lead Sources</CardTitle>
-          <CardDescription>Manage sources of customer leads and inquiries.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex items-center gap-2">

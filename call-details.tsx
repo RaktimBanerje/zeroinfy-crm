@@ -126,7 +126,6 @@ export default function CallDetails() {
           <Card>
             <CardHeader>
               <CardTitle>Call Information</CardTitle>
-              <CardDescription>View and manage call details.</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="details">

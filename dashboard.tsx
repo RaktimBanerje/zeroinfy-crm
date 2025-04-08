@@ -415,7 +415,6 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle>Call Management</CardTitle>
-                <CardDescription>View and manage customer calls by order stage.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="first-order" onValueChange={handleTabChange}>
@@ -599,7 +598,6 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle>Follow-Up Tasks</CardTitle>
-                <CardDescription>Manage your assigned follow-up tasks.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border">
@@ -645,13 +643,6 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle>Call Details</CardTitle>
-                <CardDescription>
-                  {statusFilter === "New"
-                    ? "Assigned Calls"
-                    : statusFilter === "In Progress"
-                      ? "Pending Calls"
-                      : "Completed Calls"}
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

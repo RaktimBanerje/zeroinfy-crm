@@ -32,15 +32,8 @@ export default function LoginPage() {
         description: `Logged in as ${userType}`,
       })
       
-      router.push(`/${userType}/calls`)
+      router.push(`/${userType}/dashboard`)
 
-      // if(userType == "staff") {
-      //   router.push(`/${userType}/calls`)
-      // }
-      // else {
-      //   router.push(`/${userType}/dashboard`)
-      // }
-      
       setIsLoading(false)
     }, 1000)
   }
@@ -50,7 +43,6 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold">Zeroinfy CRM</CardTitle>
-          <CardDescription>Enter your credentials to access the CRM system</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">

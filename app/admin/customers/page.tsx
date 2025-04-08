@@ -174,7 +174,6 @@ export default function CustomersPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Customer Management</CardTitle>
-          <CardDescription>View, filter, and manage all customers in the system.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 space-y-4">

@@ -266,7 +266,6 @@ export default function BulkUploadPage() {
       <Card>
         <CardHeader>
           <CardTitle>Upload File</CardTitle>
-          <CardDescription>Upload a CSV file to add multiple customers at once.</CardDescription>
         </CardHeader>
         <CardContent>
           {step === "upload" && (

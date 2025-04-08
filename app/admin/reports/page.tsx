@@ -235,7 +235,6 @@ export default function ReportsPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Reports</CardTitle>
-          <CardDescription>View and analyze customer data and trends.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -421,7 +420,6 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Lead Sources</CardTitle>
-                  <CardDescription>Distribution of customers by lead source</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[400px]">
@@ -443,7 +441,6 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Course Distribution</CardTitle>
-                  <CardDescription>Distribution of customers by course</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[400px]">
@@ -476,7 +473,6 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Customer Acquisition Trend</CardTitle>
-                  <CardDescription>Number of new customers over time</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[400px]">

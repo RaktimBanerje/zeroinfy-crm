@@ -229,7 +229,6 @@ export default function TagsPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Tags</CardTitle>
-          <CardDescription>Manage tags for categorizing customers and calls.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="course" onValueChange={setActiveTab}>

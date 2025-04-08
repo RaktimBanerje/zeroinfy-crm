@@ -252,7 +252,6 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Call Status Distribution</CardTitle>
-            <CardDescription>Overview of calls by their current status</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -285,7 +284,6 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Call Management</CardTitle>
-          <CardDescription>View and manage customer calls by follow-up stage.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="first-order" onValueChange={setActiveTab}>

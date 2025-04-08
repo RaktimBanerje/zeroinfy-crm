@@ -121,7 +121,6 @@ export default function BulkUpload() {
       <Card>
         <CardHeader>
           <CardTitle>Bulk Upload Calls</CardTitle>
-          <CardDescription>Upload a CSV or Excel file to add multiple calls at once.</CardDescription>
         </CardHeader>
         <CardContent>
           {step === "upload" && (
