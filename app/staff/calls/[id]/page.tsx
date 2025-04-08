@@ -398,7 +398,7 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                         {editedTags.map((tag) => (
                           <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                             {tag}
-                            <Button
+                            {/* <Button
                               type="button"
                               variant="ghost"
                               size="icon"
@@ -407,7 +407,7 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                             >
                               <X className="h-3 w-3" />
                               <span className="sr-only">Remove {tag}</span>
-                            </Button>
+                            </Button> */}
                           </Badge>
                         ))}
                       </div>
@@ -426,6 +426,37 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                             </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
+                             {/* Term Dropdown */}
+                             <div className="grid gap-2">
+                              <Label htmlFor="term">Term</Label>
+                              <Select onValueChange={(value) => handleTagSelect(value)}>
+                                <SelectTrigger id="term" className="w-full">
+                                  <SelectValue placeholder="Select term" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className="flex items-center border-b px-3 pb-1">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <Input
+                                      placeholder="Search term..."
+                                      className="h-8 border-0 bg-transparent p-0 focus-visible:ring-0"
+                                    />
+                                  </div>
+                                  {availableTags
+                                    .filter((tag) => tag.category === "Term")
+                                    .map((tag) => (
+                                      <SelectItem key={tag.value} value={tag.value}>
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                            {editedTags.includes(tag.value) && <Check className="h-3 w-3" />}
+                                          </div>
+                                          {tag.label}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
                             {/* Course Dropdown */}
                             <div className="grid gap-2">
                               <Label htmlFor="course">Course</Label>
@@ -443,37 +474,6 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                                   </div>
                                   {availableTags
                                     .filter((tag) => tag.category === "Course")
-                                    .map((tag) => (
-                                      <SelectItem key={tag.value} value={tag.value}>
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                            {editedTags.includes(tag.value) && <Check className="h-3 w-3" />}
-                                          </div>
-                                          {tag.label}
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Term Dropdown */}
-                            <div className="grid gap-2">
-                              <Label htmlFor="term">Term</Label>
-                              <Select onValueChange={(value) => handleTagSelect(value)}>
-                                <SelectTrigger id="term" className="w-full">
-                                  <SelectValue placeholder="Select term" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <div className="flex items-center border-b px-3 pb-1">
-                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                                    <Input
-                                      placeholder="Search term..."
-                                      className="h-8 border-0 bg-transparent p-0 focus-visible:ring-0"
-                                    />
-                                  </div>
-                                  {availableTags
-                                    .filter((tag) => tag.category === "Term")
                                     .map((tag) => (
                                       <SelectItem key={tag.value} value={tag.value}>
                                         <div className="flex items-center gap-2">
@@ -515,6 +515,36 @@ export default function CallDetailsPage({ params }: { params: { id: string } }) 
                                         </div>
                                       </SelectItem>
                                     ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Faculty Dropdown */}
+                            <div className="grid gap-2">
+                              <Label htmlFor="faculty">Faculty</Label>
+                              <Select onValueChange={(value) => handleTagSelect(value)}>
+                                <SelectTrigger id="faculty" className="w-full">
+                                  <SelectValue placeholder="Select faculty" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className="flex items-center border-b px-3 pb-1">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <Input
+                                      placeholder="Search faculty..."
+                                      className="h-8 border-0 bg-transparent p-0 focus-visible:ring-0"
+                                    />
+                                  </div>
+                                  {/* Faculty Options */}
+                                  {['Faculty 1', 'Faculty 2', 'Faculty 3'].map((faculty, index) => (
+                                    <SelectItem key={index} value={faculty}>
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                          {editedTags.includes(faculty) && <Check className="h-3 w-3" />}
+                                        </div>
+                                        {faculty}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>

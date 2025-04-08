@@ -45,6 +45,59 @@ const followUpCallsBySource = {
 
 // Dummy call data
 const dummyCallData = {
+  "all-calls": [
+    {
+      id: "call1",
+      name: "Rahul Sharma",
+      phoneNumber: "+91 98765 43210",
+      query: "Interested in CA Final course. Wants to know about the fee structure and study materials.",
+      status: "New",
+      source: "Website",
+      tags: ["CA Final", "Accounts", "May 2025"],
+      assigned: false,
+    },
+    {
+      id: "call2",
+      name: "Priya Patel",
+      phoneNumber: "+91 87654 32109",
+      query: "Looking for CA Inter coaching. Has questions about the batch timings and faculty.",
+      status: "New",
+      source: "Referral",
+      tags: ["CA Inter", "Law"],
+      assigned: false,
+    },
+    {
+      id: "call3",
+      name: "Amit Kumar",
+      phoneNumber: "+91 76543 21098",
+      query: "Wants to enroll for CA Foundation. Needs scholarship information and payment options.",
+      status: "New",
+      source: "Social Media",
+      tags: ["CA Foundation", "Scholarship"],
+      assigned: false,
+    },
+    {
+      id: "call4",
+      name: "Sneha Gupta",
+      phoneNumber: "+91 65432 10987",
+      query:
+        "Interested in switching from another coaching institute. Wants to know the process and if any credits can be transferred.",
+      status: "New",
+      source: "Phone Inquiry",
+      tags: ["CA Final", "Taxation", "Transfer"],
+      assigned: false,
+    },
+    {
+      id: "call5",
+      name: "Vikram Singh",
+      phoneNumber: "+91 54321 09876",
+      query: "Wants to know about the success rate and placement assistance for CA Final students.",
+      status: "New",
+      source: "Website",
+      tags: ["CA Final", "Audit", "Placement"],
+      assigned: false,
+    },
+  ],
   "fresh-calls": [
     {
       id: "call1",
@@ -325,6 +378,7 @@ export default function StaffDashboard() {
   const [filteredCalls, setFilteredCalls] = useState(expandedCallData["fresh-calls"])
   const [stats, setStats] = useState({
     tabData: [
+      { id: "all-calls", label: "All Calls", count: expandedCallData["all-calls"].length },
       { id: "fresh-calls", label: "Fresh Calls", count: expandedCallData["fresh-calls"].length },
       { id: "first-followup", label: "First Follow-up", count: expandedCallData["first-followup"].length },
       { id: "second-followup", label: "Second Follow-up", count: expandedCallData["second-followup"].length },
@@ -442,9 +496,6 @@ export default function StaffDashboard() {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Staff Dashboard</h1>
-        <Button asChild>
-          <Link href="/staff/calls">View All Calls</Link>
-        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -486,31 +537,43 @@ export default function StaffDashboard() {
 
       <Card>
         <CardHeader className={`pb-2 sticky top-0 z-30 bg-background transition-all ${scrolled ? "shadow-md" : ""}`}>
-          <CardTitle className={scrolled ? "sr-only" : ""}>Call Management</CardTitle>
+          <CardTitle className={scrolled ? "sr-only" : ""}>Activities</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs defaultValue="fresh-calls" onValueChange={setActiveTab}>
             <TabsList
-              className={`mb-4 grid w-full grid-cols-5 sticky top-0 z-20 bg-background transition-all ${scrolled ? "top-0" : "top-16"}`}
+              className={`mb-4 grid w-full grid-cols-6 sticky top-0 z-20 bg-background transition-all ${scrolled ? "top-0" : "top-16"}`}
             >
               {stats.tabData.map((tab) => (
                 <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                style={{ marginLeft: 10, marginRight: 10 }}
-                className={`relative 
-                  ${tab.id === activeTab
-                    ? (tab.id === "fresh-calls" ? "bg-blue-700 text-white" :
-                       tab.id === "first-followup" ? "bg-green-700 text-white" :
-                       tab.id === "second-followup" ? "bg-yellow-700 text-white" :
-                       tab.id === "third-followup" ? "bg-orange-700 text-white" :
-                       tab.id === "fourth-followup" ? "bg-red-700 text-white" : "bg-gray-700 text-white")
-                    : (tab.id === "fresh-calls" ? "bg-blue-200 text-blue-600" :
-                       tab.id === "first-followup" ? "bg-green-200 text-green-600" :
-                       tab.id === "second-followup" ? "bg-yellow-200 text-yellow-600" :
-                       tab.id === "third-followup" ? "bg-orange-200 text-orange-600" :
-                       tab.id === "fourth-followup" ? "bg-red-200 text-red-600" : "bg-gray-200 text-gray-600")}
-                  hover:bg-opacity-90 transition-all`}
+                style={{
+                  marginLeft: "10px",
+                  marginRight: "10px",
+                  backgroundColor: tab.id === activeTab
+                    ? (tab.id === "fresh-calls" ? "#4CAF50" :
+                      tab.id === "first-followup" ? "#FF9800" :
+                      tab.id === "second-followup" ? "#F44336" :
+                      tab.id === "third-followup" ? "#2196F3" :
+                      tab.id === "fourth-followup" ? "#9C27B0" :
+                      tab.id === "all-calls" ? "#3F51B5" : "rgb(245, 48, 48)")
+                    : (tab.id === "fresh-calls" ? "#A5D6A7" :
+                      tab.id === "first-followup" ? "#FFCC80" :
+                      tab.id === "second-followup" ? "#FFCDD2" :
+                      tab.id === "third-followup" ? "#BBDEFB" :
+                      tab.id === "fourth-followup" ? "#E1BEE7" :
+                      tab.id === "all-calls" ? "#C5CAE9" : "#F5F5F5"),
+                  color: tab.id === activeTab
+                    ? "white"
+                    : (tab.id === "fresh-calls" ? "#388E3C" :
+                      tab.id === "first-followup" ? "#FF5722" :
+                      tab.id === "second-followup" ? "#D32F2F" :
+                      tab.id === "third-followup" ? "#1976D2" :
+                      tab.id === "fourth-followup" ? "#8E24AA" :
+                      tab.id === "all-calls" ? "#303F9F" : "#757575"),
+                }}
+                className="relative hover:bg-opacity-90 transition-all"
               >
                 {tab.label}
                 <span style={{ right: 10, top: 5 }} className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
@@ -527,92 +590,119 @@ export default function StaffDashboard() {
                 >
                   {/* Source Tabs */}
                   <div className="flex overflow-x-auto pb-2">
-                  <div className="flex space-x-1">
-  <Button
-    variant={activeSourceTab === "all" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "all"
-        ? "bg-blue-600 text-white"
-        : "bg-blue-200 text-blue-600"
-    } hover:bg-blue-500`}
-    onClick={() => setActiveSourceTab("all")}
-  >
-    All Sources
-  </Button>
-  <Button
-    variant={activeSourceTab === "missed-call-1" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "missed-call-1"
-        ? "bg-yellow-600 text-white"
-        : "bg-yellow-200 text-yellow-600"
-    } hover:bg-yellow-500`}
-    onClick={() => setActiveSourceTab("missed-call-1")}
-  >
-    Missed Call - 1
-  </Button>
-  <Button
-    variant={activeSourceTab === "missed-call-2" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "missed-call-2"
-        ? "bg-orange-600 text-white"
-        : "bg-orange-200 text-orange-600"
-    } hover:bg-orange-500`}
-    onClick={() => setActiveSourceTab("missed-call-2")}
-  >
-    Missed Call - 2
-  </Button>
-  <Button
-    variant={activeSourceTab === "received-call" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "received-call"
-        ? "bg-green-600 text-white"
-        : "bg-green-200 text-green-600"
-    } hover:bg-green-500`}
-    onClick={() => setActiveSourceTab("received-call")}
-  >
-    Received Call
-  </Button>
-  <Button
-    variant={activeSourceTab === "callback" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "callback"
-        ? "bg-teal-600 text-white"
-        : "bg-teal-200 text-teal-600"
-    } hover:bg-teal-500`}
-    onClick={() => setActiveSourceTab("callback")}
-  >
-    Callback
-  </Button>
-  <Button
-    variant={activeSourceTab === "whatsapp" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "whatsapp"
-        ? "bg-purple-600 text-white"
-        : "bg-purple-200 text-purple-600"
-    } hover:bg-purple-500`}
-    onClick={() => setActiveSourceTab("whatsapp")}
-  >
-    WhatsApp
-  </Button>
-  <Button
-    variant={activeSourceTab === "abandoned-checkout" ? "default" : "outline"}
-    size="sm"
-    className={`${
-      activeSourceTab === "abandoned-checkout"
-        ? "bg-pink-600 text-white"
-        : "bg-pink-200 text-pink-600"
-    } hover:bg-pink-500`}
-    onClick={() => setActiveSourceTab("abandoned-checkout")}
-  >
-    Abandoned Checkout
-  </Button>
-</div>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant={activeSourceTab === "all" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "all" ? "#00BCD4" : "#B2EBF2", // Cyan color for All Sources
+                          color: activeSourceTab === "all" ? "white" : "#00ACC1",
+                        }}
+                        onClick={() => setActiveSourceTab("all")}
+                        className="relative w-[160px]"
+                      >
+                        All Sources
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          35
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "missed-call-1" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "missed-call-1" ? "#FF5722" : "#FFCCBC", // Deep Orange for Missed Call - 1
+                          color: activeSourceTab === "missed-call-1" ? "white" : "#D32F2F",
+                        }}
+                        onClick={() => setActiveSourceTab("missed-call-1")}
+                        className="relative w-[160px]"
+                      >
+                        Missed Call - 1
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          5
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "missed-call-2" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "missed-call-2" ? "#FFC107" : "#FFF59D", // Amber for Missed Call - 2
+                          color: activeSourceTab === "missed-call-2" ? "white" : "#F57C00",
+                        }}
+                        onClick={() => setActiveSourceTab("missed-call-2")}
+                        className="relative w-[160px]"
+                      >
+                        Missed Call - 2
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          5
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "received-call" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "received-call" ? "#8BC34A" : "#C8E6C9", // Light Green for Received Call
+                          color: activeSourceTab === "received-call" ? "white" : "#388E3C",
+                        }}
+                        onClick={() => setActiveSourceTab("received-call")}
+                        className="relative w-[160px]"
+                      >
+                        Received Call
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          5
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "callback" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "callback" ? "#673AB7" : "#D1C4E9", // Deep Purple for Callback
+                          color: activeSourceTab === "callback" ? "white" : "#512DA8",
+                        }}
+                        onClick={() => setActiveSourceTab("callback")}
+                        className="relative w-[160px]"
+                      >
+                        Callback
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          5
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "whatsapp" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "whatsapp" ? "#009688" : "#B2DFDB", // Teal for WhatsApp
+                          color: activeSourceTab === "whatsapp" ? "white" : "#00796B",
+                        }}
+                        onClick={() => setActiveSourceTab("whatsapp")}
+                        className="relative w-[160px]"
+                      >
+                        WhatsApp
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          5
+                        </span>
+                      </Button>
+
+                      <Button
+                        variant={activeSourceTab === "abandoned-checkout" ? "default" : "outline"}
+                        size="sm"
+                        style={{
+                          backgroundColor: activeSourceTab === "abandoned-checkout" ? "#607D8B" : "#CFD8DC", // Blue Grey for Abandoned Checkout
+                          color: activeSourceTab === "abandoned-checkout" ? "white" : "#455A64",
+                        }}
+                        onClick={() => setActiveSourceTab("abandoned-checkout")}
+                        className="relative w-[160px]"
+                      >
+                        Checkout
+                        <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          10
+                        </span>
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Search and Filters */}
@@ -719,6 +809,45 @@ export default function StaffDashboard() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+
+                                            {/* Faculty Dropdown */}
+                                            <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Filter className="mr-2 h-4 w-4" />
+                            Faculty {tagFilters.length > 0 && `(${tagFilters.length})`}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Filter by Faculty</DropdownMenuLabel>
+                          <Input placeholder="Search ..." className="mb-2" />
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-a')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-a') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty A
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-b')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-b') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty B
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-c')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-c') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty C
+                            </div>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
 
                       {/* Term Dropdown */}
                       <DropdownMenu>

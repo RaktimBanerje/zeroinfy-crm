@@ -193,63 +193,24 @@ export default function NewCallsPage() {
     }
   }
 
+  const handleTableRowClick = (id) => {
+    console.log(id); // Logs the ID correctly
+
+    // Get the button element and trigger the click event
+    const button = document.getElementById(`btn${id}`);
+    if (button) {
+      button.click(); // Programmatically trigger the click event
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Call Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle>New Calls</CardTitle>
+          <CardTitle>All Calls</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Source Tabs */}
-          <div className="flex overflow-x-auto pb-2">
-          <div className="flex space-x-1">
-              <Button
-                size="sm"
-                className="bg-blue-600 text-white hover:bg-blue-500"
-              >
-                All Sources
-              </Button>
-              <Button
-                size="sm"
-                className="bg-yellow-600 text-white hover:bg-yellow-500"
-              >
-                Missed Call - 1
-              </Button>
-              <Button
-                size="sm"
-                className="bg-orange-600 text-white hover:bg-orange-500"
-              >
-                Missed Call - 2
-              </Button>
-              <Button
-                size="sm"
-                className="bg-green-600 text-white hover:bg-green-500"
-              >
-                Received Call
-              </Button>
-              <Button
-                size="sm"
-                className="bg-teal-600 text-white hover:bg-teal-500"
-              >
-                Callback
-              </Button>
-              <Button
-                size="sm"
-                className="bg-purple-600 text-white hover:bg-purple-500"
-              >
-                WhatsApp
-              </Button>
-              <Button
-                size="sm"
-                className="bg-pink-600 text-white hover:bg-pink-500"
-               
-              >
-                Abandoned Checkout
-              </Button>
-            </div>
-          </div>
-
           <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between sticky top-0 bg-background z-10 py-2">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -261,6 +222,47 @@ export default function NewCallsPage() {
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {/* Status Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Status {tagFilters.length > 0 && `(${tagFilters.length})`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                  <Input
+                    placeholder="Search ..."
+                    className="mb-2"
+                  />
+                  <DropdownMenuItem onClick={() => toggleTagFilter('in-progress')}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border rounded flex items-center justify-center">
+                        {tagFilters.includes('in-progress') && <Check className="h-3 w-3" />}
+                      </div>
+                      In Progress
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleTagFilter('closed')}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border rounded flex items-center justify-center">
+                        {tagFilters.includes('closed') && <Check className="h-3 w-3" />}
+                      </div>
+                      Closed
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleTagFilter('sold')}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border rounded flex items-center justify-center">
+                        {tagFilters.includes('sold') && <Check className="h-3 w-3" />}
+                      </div>
+                      Sold
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/* Course Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -553,17 +555,6 @@ export default function NewCallsPage() {
               <Table>
                 <TableHeader className="sticky top-0 bg-muted">
                   <TableRow>
-                    <TableHead className="w-[50px]">
-                      <div className="flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
-                          onChange={toggleSelectAll}
-                          className="h-4 w-4"
-                          aria-label="Select all calls"
-                        />
-                      </div>
-                    </TableHead>
                     <TableHead>Customer Name</TableHead>
                     <TableHead>Phone Number</TableHead>
                     <TableHead className="w-[40%]">Query</TableHead>
@@ -580,18 +571,7 @@ export default function NewCallsPage() {
                     </TableRow>
                   ) : (
                     filteredCalls.map((call) => (
-                      <TableRow key={call.id}>
-                        <TableCell>
-                          <div className="flex items-center justify-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedCalls.includes(call.id)}
-                              onChange={() => toggleCallSelection(call.id)}
-                              className="h-4 w-4"
-                              aria-label={`Select call from ${call.name}`}
-                            />
-                          </div>
-                        </TableCell>
+                      <TableRow key={call.id} onClick={() => handleTableRowClick(call.id)}>
                         <TableCell className="font-medium">{call.name}</TableCell>
                         <TableCell>{call.phoneNumber}</TableCell>
                         <TableCell className="max-w-[400px]">
@@ -610,6 +590,10 @@ export default function NewCallsPage() {
                                 +{call.tags.length - 2}
                               </Badge>
                             )}
+                            
+                            <Button id={`btn${call.id}`} variant="ghost" size="sm" asChild style={{ display: 'none' }}>
+                              <Link href={`/staff/calls/${call.id}`}>View</Link>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

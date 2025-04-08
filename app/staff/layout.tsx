@@ -111,14 +111,80 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 pathname.startsWith("/staff/calls") ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Calls
+              Activities
+            </Link>
+            <Link
+              href="/staff/all-calls"
+              className={`text-sm font-medium ${
+                pathname.startsWith("/staff/all-calls") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Leads
             </Link>
             <Button variant="outline" asChild>
-              <Link href="/staff/new-calls" className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                New Calls
-              </Link>
-            </Button>
+            
+            <Link
+              href="/staff/new-calls"
+              className="relative flex items-center gap-2 px-4 py-2 w-[180px] rounded-lg text-white transition-all bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 animate-gradient hover:scale-105"
+            >
+              <Phone className="h-4 w-4" />
+              New Leads
+
+              {/* Badge */}
+              <span
+                style={{ right: 12, top: 8 }}
+                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs text-black animate-pulse"
+              >
+                10
+              </span>
+            </Link>
+          </Button>
+
+<style jsx>{`
+  /* Rainbow gradient animation */
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 400% 400%;
+    animation: gradientAnimation 3s ease infinite;
+  }
+
+  /* Glowing effect on hover */
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.6);
+  }
+
+  /* Pulse animation for badge */
+  .animate-pulse {
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+`}</style>
             <Avatar className="h-8 w-8">
               <AvatarFallback>JS</AvatarFallback>
             </Avatar>
