@@ -127,7 +127,6 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
               href="/staff/new-calls"
               className="relative flex items-center gap-2 px-4 py-2 w-[180px] rounded-lg text-white transition-all bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 animate-gradient hover:scale-105"
             >
-              <Phone className="h-4 w-4" />
               New Leads
 
               {/* Badge */}

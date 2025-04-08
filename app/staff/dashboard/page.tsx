@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from 'next/router'
 import Link from "next/link"
-import { Filter, Search, Check, X } from "lucide-react"
+import { Filter, Search, Check, X, Plus, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -496,6 +496,20 @@ export default function StaffDashboard() {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Staff Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link href="/staff/customers/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Customer
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/staff/customers/bulk-upload">
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Upload
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -769,86 +783,6 @@ export default function StaffDashboard() {
                       </DropdownMenu> */}
 
                       {/* Tags Filter - Separate Dropdowns */}
-                      {/* Course Dropdown */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" />
-                            Course {tagFilters.length > 0 && `(${tagFilters.length})`}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Filter by Course</DropdownMenuLabel>
-                          <Input
-                            placeholder="Search ..."
-                            className="mb-2"
-                          />
-                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-final')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('ca-final') && <Check className="h-3 w-3" />}
-                              </div>
-                              CA Final
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-inter')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('ca-inter') && <Check className="h-3 w-3" />}
-                              </div>
-                              CA Inter
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-foundation')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('ca-foundation') && <Check className="h-3 w-3" />}
-                              </div>
-                              CA Foundation
-                            </div>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                                            {/* Faculty Dropdown */}
-                                            <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" />
-                            Faculty {tagFilters.length > 0 && `(${tagFilters.length})`}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Filter by Faculty</DropdownMenuLabel>
-                          <Input placeholder="Search ..." className="mb-2" />
-                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-a')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('faculty-a') && <Check className="h-3 w-3" />}
-                              </div>
-                              Faculty A
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-b')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('faculty-b') && <Check className="h-3 w-3" />}
-                              </div>
-                              Faculty B
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-c')}>
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 border rounded flex items-center justify-center">
-                                {tagFilters.includes('faculty-c') && <Check className="h-3 w-3" />}
-                              </div>
-                              Faculty C
-                            </div>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-
                       {/* Term Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -885,6 +819,47 @@ export default function StaffDashboard() {
                                 {tagFilters.includes('may-2026') && <Check className="h-3 w-3" />}
                               </div>
                               May 2026
+                            </div>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Course Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Filter className="mr-2 h-4 w-4" />
+                            Course {tagFilters.length > 0 && `(${tagFilters.length})`}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Filter by Course</DropdownMenuLabel>
+                          <Input
+                            placeholder="Search ..."
+                            className="mb-2"
+                          />
+                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-final')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('ca-final') && <Check className="h-3 w-3" />}
+                              </div>
+                              CA Final
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-inter')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('ca-inter') && <Check className="h-3 w-3" />}
+                              </div>
+                              CA Inter
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('ca-foundation')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('ca-foundation') && <Check className="h-3 w-3" />}
+                              </div>
+                              CA Foundation
                             </div>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -934,6 +909,44 @@ export default function StaffDashboard() {
                                 {tagFilters.includes('audit') && <Check className="h-3 w-3" />}
                               </div>
                               Audit
+                            </div>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Faculty Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Filter className="mr-2 h-4 w-4" />
+                            Faculty {tagFilters.length > 0 && `(${tagFilters.length})`}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Filter by Faculty</DropdownMenuLabel>
+                          <Input placeholder="Search ..." className="mb-2" />
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-a')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-a') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty A
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-b')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-b') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty B
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTagFilter('faculty-c')}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border rounded flex items-center justify-center">
+                                {tagFilters.includes('faculty-c') && <Check className="h-3 w-3" />}
+                              </div>
+                              Faculty C
                             </div>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
