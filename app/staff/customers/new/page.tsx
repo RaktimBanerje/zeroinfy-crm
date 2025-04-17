@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -16,6 +15,14 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { addCustomer, getSources, getTagsByType, getDependentTags } from "@/lib/data-service"
 import { useToast } from "@/components/ui/use-toast"
+
+import Course from '../../../components/Course'
+import CustomTagOne from '../../../components/CustomTagOne'
+import CustomTagTwo from '../../../components/CustomTagTwo'
+import FollowUpLevel from '../../../components/FollowUpLevel'
+import Source from '../../../components/Source'
+import Subject from '../../../components/Subject'
+import Term from '../../../components/Term'
 
 export default function NewCustomerPage() {
   const router = useRouter()
@@ -71,71 +78,6 @@ export default function NewCustomerPage() {
     }
   }
 
-  // Handle tag change
-  const handleTagChange = (type: string, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      tags: {
-        ...prev.tags,
-        [type]: value,
-      },
-    }))
-
-    // If changing course, update subject options
-    if (type === "course") {
-      const courseTag = courseTags.find((tag) => tag.name === value)
-      if (courseTag) {
-        const subjects = getDependentTags(courseTag.id)
-        setSubjectTags(subjects)
-
-        // Clear subject if not available in new course
-        if (form.tags.subject && !subjects.some((tag) => tag.name === form.tags.subject)) {
-          setForm((prev) => ({
-            ...prev,
-            tags: {
-              ...prev.tags,
-              subject: "",
-            },
-          }))
-        }
-      } else {
-        setSubjectTags([])
-        setForm((prev) => ({
-          ...prev,
-          tags: {
-            ...prev.tags,
-            subject: "",
-          },
-        }))
-      }
-    }
-  }
-
-  // Handle custom tag add
-  const handleAddCustomTag = () => {
-    if (newCustomTag && !form.tags.custom.includes(newCustomTag)) {
-      setForm((prev) => ({
-        ...prev,
-        tags: {
-          ...prev.tags,
-          custom: [...prev.tags.custom, newCustomTag],
-        },
-      }))
-      setNewCustomTag("")
-    }
-  }
-
-  // Handle custom tag remove
-  const handleRemoveCustomTag = (tag: string) => {
-    setForm((prev) => ({
-      ...prev,
-      tags: {
-        ...prev.tags,
-        custom: prev.tags.custom.filter((t) => t !== tag),
-      },
-    }))
-  }
-
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -158,9 +100,9 @@ export default function NewCustomerPage() {
       newErrors.query = "Query is required"
     }
 
-    if (!form.source) {
-      newErrors.source = "Source is required"
-    }
+    // if (!form.source) {
+    //   newErrors.source = "Source is required"
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -181,12 +123,17 @@ export default function NewCustomerPage() {
 
     try {
       // Add customer
-      const userEmail = localStorage.getItem("userEmail") || ""
+      console.log(form)
 
-      const newCustomer = addCustomer({
-        ...form,
-        assignedTo: userEmail,
-      })
+
+      // const userEmail = localStorage.getItem("userEmail") || ""
+
+      // const newCustomer = addCustomer({
+      //   ...form,
+      //   assignedTo: userEmail,
+      // })
+
+
 
       toast({
         title: "Customer Added",
@@ -264,21 +211,7 @@ export default function NewCustomerPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="source">
-                  Source <span className="text-red-500">*</span>
-                </Label>
-                <Select value={form.source} onValueChange={(value) => handleFormChange("source", value)}>
-                  <SelectTrigger id="source" className={errors.source ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Select source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sources.map((source) => (
-                      <SelectItem key={source.id} value={source.name}>
-                        {source.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Source />
                 {errors.source && <p className="text-xs text-red-500">{errors.source}</p>}
               </div>
             </div>
@@ -302,107 +235,27 @@ export default function NewCustomerPage() {
               <h3 className="text-lg font-medium mb-4">Tags</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="course">Course</Label>
-                  <Select value={form.tags.course} onValueChange={(value) => handleTagChange("course", value)}>
-                    <SelectTrigger id="course">
-                      <SelectValue placeholder="Select course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {courseTags.map((tag) => (
-                        <SelectItem key={tag.id} value={tag.name}>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Course />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Select
-                    value={form.tags.subject}
-                    onValueChange={(value) => handleTagChange("subject", value)}
-                    disabled={!form.tags.course || subjectTags.length === 0}
-                  >
-                    <SelectTrigger id="subject">
-                      <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {subjectTags.map((tag) => (
-                        <SelectItem key={tag.id} value={tag.name}>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Subject />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="term">Term</Label>
-                  <Select value={form.tags.term} onValueChange={(value) => handleTagChange("term", value)}>
-                    <SelectTrigger id="term">
-                      <SelectValue placeholder="Select term" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {termTags.map((tag) => (
-                        <SelectItem key={tag.id} value={tag.name}>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Term />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="faculty">Faculty</Label>
-                  <Select value={form.tags.faculty} onValueChange={(value) => handleTagChange("faculty", value)}>
-                    <SelectTrigger id="faculty">
-                      <SelectValue placeholder="Select faculty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {facultyTags.map((tag) => (
-                        <SelectItem key={tag.id} value={tag.name}>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                
                 </div>
-              </div>
 
-              <div className="mt-4 space-y-2">
-                <Label>Custom Tags</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {form.tags.custom.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {tag}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 rounded-full p-0"
-                        onClick={() => handleRemoveCustomTag(tag)}
-                        type="button"
-                      >
-                        <X className="h-3 w-3" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  <CustomTagOne />
                 </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add custom tag"
-                    value={newCustomTag}
-                    onChange={(e) => setNewCustomTag(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button type="button" onClick={handleAddCustomTag} disabled={!newCustomTag}>
-                    Add
-                  </Button>
+
+                <div className="space-y-2">
+                  <CustomTagTwo />
                 </div>
               </div>
             </div>
