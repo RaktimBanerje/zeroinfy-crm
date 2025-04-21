@@ -11,24 +11,6 @@ try {
   }
 }
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-  experimental: {
-    webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-  },
-}
-
 if (userConfig) {
   // ESM imports will have a "default" property
   const config = userConfig.default || userConfig
@@ -47,5 +29,3 @@ if (userConfig) {
     }
   }
 }
-
-export default nextConfig

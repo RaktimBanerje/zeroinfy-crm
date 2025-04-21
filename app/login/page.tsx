@@ -3,10 +3,15 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
@@ -16,23 +21,52 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (userType: "admin" | "staff") => {
+  const staticUsers = {
+    admin: { email: "admin@example.com", password: "admin123" },
+    staff: [
+      { email: "arka@gmail.com", password: "staff123" },
+      { email: "raktimbanerjee9@gmail.com", password: "staff123" },
+    ],
+  }
+
+  const handleLogin = () => {
     setIsLoading(true)
 
-    // Simulate login
     setTimeout(() => {
-      // In a real app, you would validate credentials against a backend
-      localStorage.setItem("userType", userType)
-      localStorage.setItem("isLoggedIn", "true")
-      localStorage.setItem("userEmail", email)
-      localStorage.setItem("userName", email.split("@")[0])
+      let userType: "admin" | "staff" | null = null
 
-      toast({
-        title: "Login successful",
-        description: `Logged in as ${userType}`,
-      })
-      
-      router.push(`/${userType}/dashboard`)
+      if (
+        email === staticUsers.admin.email &&
+        password === staticUsers.admin.password
+      ) {
+        userType = "admin"
+      } else if (
+        staticUsers.staff.some(
+          (user) => user.email === email && user.password === password
+        )
+      ) {
+        userType = "staff"
+      }
+
+      if (userType) {
+        localStorage.setItem("userType", userType)
+        localStorage.setItem("isLoggedIn", "true")
+        localStorage.setItem("userEmail", email)
+        localStorage.setItem("userName", email.split("@")[0])
+
+        toast({
+          title: "Login successful",
+          description: `Logged in as ${userType}`,
+        })
+
+        router.push(`/${userType}/dashboard`)
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
+          variant: "destructive",
+        })
+      }
 
       setIsLoading(false)
     }, 1000)
@@ -45,71 +79,41 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold">Zeroinfy CRM</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="demo">Demo Access</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Button variant="link" className="px-0 text-xs">
-                      Forgot password?
-                    </Button>
-                  </div>
-                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => handleLogin("staff")}
-                  disabled={isLoading || !email || !password}
-                >
-                  {isLoading ? "Logging in..." : "Login as Staff"}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Button variant="link" className="px-0 text-xs">
+                  Forgot password?
                 </Button>
               </div>
-            </TabsContent>
-            <TabsContent value="demo">
-              <div className="space-y-4 text-center">
-                <p className="text-sm text-muted-foreground">Choose a demo account to explore the system</p>
-                <div className="grid gap-2">
-                  <Button
-                    onClick={() => handleLogin("admin")}
-                    className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-                    disabled={isLoading}
-                  >
-                    Login as Admin
-                  </Button>
-                  <Button
-                    onClick={() => handleLogin("staff")}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
-                    disabled={isLoading}
-                  >
-                    Login as Staff
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-muted-foreground">
-            <p>Demo credentials are automatically filled in demo mode</p>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleLogin}
+              disabled={isLoading || !email || !password}
+            >
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
           </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   )
 }
-

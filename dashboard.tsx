@@ -337,10 +337,6 @@ export default function Dashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">Assigned Calls</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{kpiData.assignedCalls}</div>
-                  <p className="text-xs text-muted-foreground">+5% from last week</p>
-                </CardContent>
               </Card>
               <Card
                 className="cursor-pointer transition-all hover:shadow-md"
@@ -349,10 +345,6 @@ export default function Dashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">Pending Calls</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{kpiData.pendingCalls}</div>
-                  <p className="text-xs text-muted-foreground">-2% from last week</p>
-                </CardContent>
               </Card>
               <Card
                 className="cursor-pointer transition-all hover:shadow-md"
@@ -361,10 +353,6 @@ export default function Dashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">Completed Calls</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{kpiData.completedCalls}</div>
-                  <p className="text-xs text-muted-foreground">+12% from last week</p>
-                </CardContent>
               </Card>
             </div>
 
