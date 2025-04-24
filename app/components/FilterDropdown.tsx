@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import directus from '../../lib/directus';
+import directus from '../../lib/directus'
 import { readItems } from "@directus/sdk"
 
 type FilterDropdownProps = {
@@ -35,17 +35,25 @@ export const FilterDropdown = ({
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchData = async () => {
       try {
         const data = await directus.request(readItems(collection))
-        setItems(data)
+        if (isMounted) {
+          setItems(data)
+        }
       } catch (error) {
         console.error(`Failed to fetch ${collection}:`, error)
       }
     }
 
     fetchData()
-  }, [collection])
+
+    return () => {
+      isMounted = false // Prevent state update if component unmounts
+    }
+  }, []) // Will re-fetch only if collection string changes
 
   const filteredItems = items.filter((item) =>
     item[labelKey]?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,8 +76,8 @@ export const FilterDropdown = ({
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         {filteredItems.map((item) => {
-          const value = item[valueKey] || item.id
-          const display = item[labelKey] || value
+          const value = item[labelKey]
+          const display = item[labelKey]
           const isActive = tagFilters.includes(value)
 
           return (
@@ -82,7 +90,7 @@ export const FilterDropdown = ({
                 <div className="h-4 w-4 border rounded flex items-center justify-center">
                   {isActive && <Check className="h-3 w-3" />}
                 </div>
-                {display}
+                {display} {/* Display the value directly */}
               </div>
             </DropdownMenuItem>
           )

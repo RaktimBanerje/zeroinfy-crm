@@ -9,12 +9,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/components/ui/use-toast"
+import Select from "react-select"
 import axios from "axios"
 import directus from "@/lib/directus"
 import { readItems } from "@directus/sdk"
-import { useToast } from "@/components/ui/use-toast"
 
 export default function NewCustomerPage() {
   const router = useRouter()
@@ -22,52 +22,50 @@ export default function NewCustomerPage() {
 
   const [form, setForm] = useState({
     name: "",
-    phoneNumber: "",
+    phone: "",
     email: "",
     query: "",
     source: "",
     status: "New",
     followUpLevel: 1,
-    course: "",
-    subject: "",
-    term: "",
-    faculty: "",
-    customOne: "",
-    customTwo: "",
+    tags: [], // ✅ flat array of selected tags
   })
 
   const [errors, setErrors] = useState({})
-  const [courses, setCourses] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [terms, setTerms] = useState([])
-  const [faculties, setFaculties] = useState([])
-  const [customTagsOne, setCustomTagsOne] = useState([])
-  const [customTagsTwo, setCustomTagsTwo] = useState([])
-  const [sources, setSources] = useState([])
+  const [dropdownOptions, setDropdownOptions] = useState({
+    courses: [],
+    subjects: [],
+    terms: [],
+    faculties: [],
+    custom_tags_one: [],
+    custom_tags_two: [],
+    sources: [],
+  })
 
   useEffect(() => {
-    async function fetchTags() {
+    const fetchTags = async () => {
       try {
-        const [coursesRes, subjectsRes, termsRes, facultiesRes, customOneRes, customTwoRes, sourcesRes] =
-          await Promise.all([
-            directus.request(readItems("courses")),
-            directus.request(readItems("subjects")),
-            directus.request(readItems("terms")),
-            directus.request(readItems("faculties")),
-            directus.request(readItems("custom_tags_one")),
-            directus.request(readItems("custom_tags_two")),
-            directus.request(readItems("sources")),
-          ])
+        const [courses, subjects, terms, faculties, customOne, customTwo, sources] = await Promise.all([
+          directus.request(readItems("courses")),
+          directus.request(readItems("subjects")),
+          directus.request(readItems("terms")),
+          directus.request(readItems("faculties")),
+          directus.request(readItems("custom_tags_one")),
+          directus.request(readItems("custom_tags_two")),
+          directus.request(readItems("sources")),
+        ])
 
-        setCourses(coursesRes.data || [])
-        setSubjects(subjectsRes.data || [])
-        setTerms(termsRes.data || [])
-        setFaculties(facultiesRes.data || [])
-        setCustomTagsOne(customOneRes.data || [])
-        setCustomTagsTwo(customTwoRes.data || [])
-        setSources(sourcesRes.data || [])
+        setDropdownOptions({
+          courses: courses,
+          subjects: subjects,
+          terms: terms,
+          faculties: faculties,
+          custom_tags_one: customOne,
+          custom_tags_two: customTwo,
+          sources: sources,
+        })
       } catch (err) {
-        console.error("Error fetching tags:", err)
+        console.error("Error fetching tag options:", err)
       }
     }
 
@@ -82,10 +80,23 @@ export default function NewCustomerPage() {
     setErrors((prev) => ({ ...prev, [field]: "" }))
   }
 
+  const handleMultiSelect = (selectedOptions, collectionName) => {
+    const selectedValues = selectedOptions.map((option) => option.value)
+    setForm((prev) => ({
+      ...prev,
+      tags: [
+        ...new Set([
+          ...prev.tags.filter((tag) => !dropdownOptions[collectionName].some((opt) => opt.id.toString() === tag)),
+          ...selectedValues,
+        ]),
+      ],
+    }))
+  }
+
   const validateForm = () => {
     const newErrors = {}
     if (!form.name.trim()) newErrors.name = "Name is required"
-    if (!form.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required"
+    if (!form.phone.trim()) newErrors.phone = "Phone number is required"
     if (!form.email.trim()) newErrors.email = "Email is required"
     else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Email is invalid"
     if (!form.query.trim()) newErrors.query = "Query is required"
@@ -107,17 +118,17 @@ export default function NewCustomerPage() {
     }
 
     try {
-      const response = await axios.post(
-        "http://zeroinfy.thinksurfmedia.in:8055/items/leads",
-        form
-      )
+      const payload = {
+        ...form,
+        tags: form.tags, // already flat array of tag values
+      }
 
-      toast({
-        title: "Success",
-        description: "Lead added successfully!",
-      })
+      console.log(payload)
 
-      router.push("/admin/customers")
+      await axios.post("http://zeroinfy.thinksurfmedia.in:8055/items/leads", payload)
+      
+      router.push("/staff/dashboard")
+
     } catch (error) {
       toast({
         title: "Error",
@@ -126,6 +137,15 @@ export default function NewCustomerPage() {
       })
     }
   }
+
+  const dropdownFields = [
+    { label: "Course", name: "courses" },
+    { label: "Subject", name: "subjects" },
+    { label: "Term", name: "terms" },
+    { label: "Faculty", name: "faculties" },
+    { label: "Custom Tag 1", name: "custom_tags_one" },
+    { label: "Custom Tag 2", name: "custom_tags_two" },
+  ]
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -147,7 +167,7 @@ export default function NewCustomerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label>Name <span className="text-red-500">*</span></Label>
+                <Label>Name *</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => handleFormChange("name", e.target.value)}
@@ -157,19 +177,18 @@ export default function NewCustomerPage() {
               </div>
 
               <div>
-                <Label>Phone Number <span className="text-red-500">*</span></Label>
+                <Label>Phone Number *</Label>
                 <Input
-                  value={form.phoneNumber}
-                  onChange={(e) => handleFormChange("phoneNumber", e.target.value)}
-                  className={errors.phoneNumber ? "border-red-500" : ""}
+                  value={form.phone}
+                  onChange={(e) => handleFormChange("phone", e.target.value)}
+                  className={errors.phone ? "border-red-500" : ""}
                 />
-                {errors.phoneNumber && <p className="text-xs text-red-500">{errors.phoneNumber}</p>}
+                {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
               </div>
 
               <div>
-                <Label>Email <span className="text-red-500">*</span></Label>
+                <Label>Email *</Label>
                 <Input
-                  type="email"
                   value={form.email}
                   onChange={(e) => handleFormChange("email", e.target.value)}
                   className={errors.email ? "border-red-500" : ""}
@@ -179,23 +198,23 @@ export default function NewCustomerPage() {
 
               <div>
                 <Label>Source</Label>
-                <Select value={form.source} onValueChange={(value) => handleFormChange("source", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sources.map((source) => (
-                      <SelectItem key={source.id} value={source.id.toString()}>
-                        {source.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  className="w-full border rounded p-2"
+                  value={form.source}
+                  onChange={(e) => handleFormChange("source", e.target.value)}
+                >
+                  <option value="">Select source</option>
+                  {dropdownOptions.sources.map((source) => (
+                    <option key={source.id} value={source.name}>
+                      {source.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
-              <Label>Query <span className="text-red-500">*</span></Label>
+              <Label>Query *</Label>
               <Textarea
                 value={form.query}
                 onChange={(e) => handleFormChange("query", e.target.value)}
@@ -206,33 +225,19 @@ export default function NewCustomerPage() {
 
             <Separator />
 
-            <h3 className="text-lg font-medium mb-4">Tags</h3>
+            <h3 className="text-lg font-medium mb-4">Tags (Multi-select)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { label: "Course", name: "course", options: courses },
-                { label: "Subject", name: "subject", options: subjects },
-                { label: "Term", name: "term", options: terms },
-                { label: "Faculty", name: "faculty", options: faculties },
-                { label: "Custom Tag 1", name: "customOne", options: customTagsOne },
-                { label: "Custom Tag 2", name: "customTwo", options: customTagsTwo },
-              ].map((tag) => (
-                <div key={tag.name}>
-                  <Label>{tag.label}</Label>
+              {dropdownFields.map((field) => (
+                <div key={field.name}>
+                  <Label>{field.label}</Label>
                   <Select
-                    value={form[tag.name]}
-                    onValueChange={(value) => handleFormChange(tag.name, value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={`Select ${tag.label.toLowerCase()}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tag.options.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.id.toString()}>
-                          {opt.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    isMulti
+                    options={dropdownOptions[field.name]?.map((item) => ({
+                      label: item.name,
+                      value: item.name,
+                    }))}
+                    onChange={(selected) => handleMultiSelect(selected, field.name)}
+                  />
                 </div>
               ))}
             </div>

@@ -1,547 +1,211 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { Filter, Search, Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
-
-// Dummy new call data
-const newCallsData = [
-  {
-    id: "call1",
-    name: "Rahul Sharma",
-    phoneNumber: "+91 98765 43210",
-    query: "Interested in CA Final course. Wants to know about the fee structure and study materials.",
-    status: "New",
-    source: "Website",
-    tags: ["CA Final", "Accounts", "May 2025"],
-  },
-  {
-    id: "call2",
-    name: "Priya Patel",
-    phoneNumber: "+91 87654 32109",
-    query: "Looking for CA Inter coaching. Has questions about the batch timings and faculty.",
-    status: "New",
-    source: "Referral",
-    tags: ["CA Inter", "Law"],
-  },
-  {
-    id: "call3",
-    name: "Amit Kumar",
-    phoneNumber: "+91 76543 21098",
-    query: "Wants to enroll for CA Foundation. Needs scholarship information and payment options.",
-    status: "New",
-    source: "Social Media",
-    tags: ["CA Foundation", "Scholarship"],
-  },
-  {
-    id: "call4",
-    name: "Sneha Gupta",
-    phoneNumber: "+91 65432 10987",
-    query:
-      "Interested in switching from another coaching institute. Wants to know the process and if any credits can be transferred.",
-    status: "New",
-    source: "Phone Inquiry",
-    tags: ["CA Final", "Taxation", "Transfer"],
-  },
-  {
-    id: "call5",
-    name: "Vikram Singh",
-    phoneNumber: "+91 54321 09876",
-    query: "Wants to know about the success rate and placement assistance for CA Final students.",
-    status: "New",
-    source: "Website",
-    tags: ["CA Final", "Audit", "Placement"],
-  },
-]
-
-// Sources for filtering
-const sources = ["Website", "Phone Inquiry", "Referral", "Social Media", "Email Campaign"]
-
-// Tags for filtering
-const allTags = [
-  "CA Final",
-  "CA Inter",
-  "CA Foundation",
-  "Accounts",
-  "Law",
-  "Taxation",
-  "Audit",
-  "May 2025",
-  "Nov 2025",
-  "Scholarship",
-  "Faculty",
-  "EMI",
-  "Transfer",
-  "Weekend Batch",
-  "Exam Pattern",
-  "Study Material",
-  "Batch Start",
-  "Placement",
-]
+import { FilterDropdown } from "@/app/components/FilterDropdown"
+import SourceTabs from "../../components/SourceTabs"
+import directus from '../../../lib/directus'
+import { readItems } from "@directus/sdk"
 
 export default function NewCallsPage() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sourceFilters, setSourceFilters] = useState<string[]>([])
-  const [tagFilters, setTagFilters] = useState<string[]>([])
-  const [filteredCalls, setFilteredCalls] = useState(newCallsData)
+
+  // 🧠 Individual tag filters per dropdown
+  const [termFilters, setTermFilters] = useState<string[]>([])
+  const [courseFilters, setCourseFilters] = useState<string[]>([])
+  const [subjectFilters, setSubjectFilters] = useState<string[]>([])
+  const [facultyFilters, setFacultyFilters] = useState<string[]>([])
+  const [customTag1Filters, setCustomTag1Filters] = useState<string[]>([])
+  const [customTag2Filters, setCustomTag2Filters] = useState<string[]>([])
+
+  const [allCalls, setAllCalls] = useState<any[]>([])
+  const [filteredCalls, setFilteredCalls] = useState<any[]>([])
   const [selectedCalls, setSelectedCalls] = useState<string[]>([])
-  const [showAssignConfirm, setShowAssignConfirm] = useState(false)
+
+  // Fetch leads from Directus
+  const fetchLeads = async () => {
+    try {
+      const data = await directus.request(readItems('leads'))
+      setAllCalls(data)
+    } catch (error) {
+      console.error("Error fetching leads from Directus:", error)
+    }
+  }
 
   useEffect(() => {
-    // Filter calls based on search query and filters
-    let filtered = [...newCallsData]
+    fetchLeads()
+  }, [])
 
-    // Apply search query
+  // Filter calls based on all filters
+  useEffect(() => {
+    let filtered = [...allCalls]
+
     if (searchQuery) {
       filtered = filtered.filter(
         (call) =>
-          call.phoneNumber.includes(searchQuery) ||
-          call.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          call.query.toLowerCase().includes(searchQuery.toLowerCase()),
+          call.phone?.includes(searchQuery) ||
+          call.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          call.query?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
-    // Apply status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((call) => call.status === statusFilter)
     }
 
-    // Apply source filters
     if (sourceFilters.length > 0) {
       filtered = filtered.filter((call) => sourceFilters.includes(call.source))
     }
 
-    // Apply tag filters
-    if (tagFilters.length > 0) {
-      filtered = filtered.filter((call) => call.tags.some((tag) => tagFilters.includes(tag)))
+    // Tag filtering
+    const tagFilterGroups = [
+      termFilters,
+      courseFilters,
+      subjectFilters,
+      facultyFilters,
+      customTag1Filters,
+      customTag2Filters,
+    ]
+
+    if (tagFilterGroups.some(group => group.length > 0)) {
+      filtered = filtered.filter(call =>
+        tagFilterGroups.every(group =>
+          group.length === 0 || group.some(tag => call.tags?.includes(tag))
+        )
+      )
     }
 
     setFilteredCalls(filtered)
-  }, [searchQuery, statusFilter, sourceFilters, tagFilters])
+  }, [
+    searchQuery,
+    statusFilter,
+    sourceFilters,
+    termFilters,
+    courseFilters,
+    subjectFilters,
+    facultyFilters,
+    customTag1Filters,
+    customTag2Filters,
+    allCalls,
+  ])
 
-  // Toggle call selection
   const toggleCallSelection = (callId: string) => {
-    setSelectedCalls((prev) => (prev.includes(callId) ? prev.filter((id) => id !== callId) : [...prev, callId]))
+    setSelectedCalls((prev) =>
+      prev.includes(callId) ? prev.filter((id) => id !== callId) : [...prev, callId]
+    )
   }
 
-  // Select all calls
   const toggleSelectAll = () => {
-    if (selectedCalls.length === filteredCalls.length) {
-      setSelectedCalls([])
-    } else {
-      setSelectedCalls(filteredCalls.map((call) => call.id))
-    }
+    setSelectedCalls((prev) =>
+      prev.length === filteredCalls.length ? [] : filteredCalls.map((call) => call.id)
+    )
   }
 
-  // Handle assigning calls
   const handleAssignCalls = () => {
     toast({
       title: "Calls Assigned",
-      description: `${selectedCalls.length} calls have been assigned to you.`,
+      description: `${selectedCalls.length} calls have been assigned.`,
     })
     setSelectedCalls([])
-    setShowAssignConfirm(false)
   }
 
-  // Toggle source filter
-  const toggleSourceFilter = (source: string) => {
-    setSourceFilters((prev) => (prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]))
-  }
-
-  // Toggle tag filter
-  const toggleTagFilter = (tag: string) => {
-    setTagFilters((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
-
-  // Clear all filters
   const clearFilters = () => {
     setSearchQuery("")
     setStatusFilter("all")
     setSourceFilters([])
-    setTagFilters([])
+    setTermFilters([])
+    setCourseFilters([])
+    setSubjectFilters([])
+    setFacultyFilters([])
+    setCustomTag1Filters([])
+    setCustomTag2Filters([])
   }
-
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "New":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-      case "Closed":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "Sold":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-    }
-  }
-
-  const handleTableRowClick = (id) => {
-    console.log(id); // Logs the ID correctly
-
-    // Get the button element and trigger the click event
-    const button = document.getElementById(`btn${id}`);
-    if (button) {
-      button.click(); // Programmatically trigger the click event
-    }
-  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      {/* Call Table */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle>All Calls</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between sticky top-0 bg-background z-10 py-2">
+          <div className="mb-4 flex items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, phone or query..."
-                className="w-full md:w-[300px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full md:w-[300px]"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Status Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Status {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('in-progress')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('in-progress') && <Check className="h-3 w-3" />}
-                      </div>
-                      In Progress
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('closed')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('closed') && <Check className="h-3 w-3" />}
-                      </div>
-                      Closed
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('sold')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('sold') && <Check className="h-3 w-3" />}
-                      </div>
-                      Sold
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex flex-wrap gap-2 items-center">
+              <FilterDropdown
+                label="Term"
+                collection="terms"
+                tagFilters={termFilters}
+                toggleTagFilter={(tag) =>
+                  setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Course"
+                collection="courses"
+                tagFilters={courseFilters}
+                toggleTagFilter={(tag) =>
+                  setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Subject"
+                collection="subjects"
+                tagFilters={subjectFilters}
+                toggleTagFilter={(tag) =>
+                  setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Faculty"
+                collection="faculties"
+                tagFilters={facultyFilters}
+                toggleTagFilter={(tag) =>
+                  setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Custom Tag 1"
+                collection="custom_tags_one"
+                tagFilters={customTag1Filters}
+                toggleTagFilter={(tag) =>
+                  setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Custom Tag 2"
+                collection="custom_tags_two"
+                tagFilters={customTag2Filters}
+                toggleTagFilter={(tag) =>
+                  setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
 
-              {/* Course Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Course {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Course</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('ca-final')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('ca-final') && <Check className="h-3 w-3" />}
-                      </div>
-                      CA Final
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('ca-inter')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('ca-inter') && <Check className="h-3 w-3" />}
-                      </div>
-                      CA Inter
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('ca-foundation')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('ca-foundation') && <Check className="h-3 w-3" />}
-                      </div>
-                      CA Foundation
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Faculty Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Faculty {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Faculty</DropdownMenuLabel>
-                  <Input placeholder="Search ..." className="mb-2" />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('faculty-a')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('faculty-a') && <Check className="h-3 w-3" />}
-                      </div>
-                      Faculty A
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('faculty-b')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('faculty-b') && <Check className="h-3 w-3" />}
-                      </div>
-                      Faculty B
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('faculty-c')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('faculty-c') && <Check className="h-3 w-3" />}
-                      </div>
-                      Faculty C
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-
-              {/* Term Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Term {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Term</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('may-2025')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('may-2025') && <Check className="h-3 w-3" />}
-                      </div>
-                      May 2025
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('nov-2025')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('nov-2025') && <Check className="h-3 w-3" />}
-                      </div>
-                      Nov 2025
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('may-2026')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('may-2026') && <Check className="h-3 w-3" />}
-                      </div>
-                      May 2026
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Subject Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Subject {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Subject</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('accounts')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('accounts') && <Check className="h-3 w-3" />}
-                      </div>
-                      Accounts
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('law')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('law') && <Check className="h-3 w-3" />}
-                      </div>
-                      Law
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('taxation')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('taxation') && <Check className="h-3 w-3" />}
-                      </div>
-                      Taxation
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('audit')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('audit') && <Check className="h-3 w-3" />}
-                      </div>
-                      Audit
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Custom Tag 1 Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Custom Tag 1 {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Custom Tag 1</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('scholarship')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('scholarship') && <Check className="h-3 w-3" />}
-                      </div>
-                      Scholarship
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('faculty')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('faculty') && <Check className="h-3 w-3" />}
-                      </div>
-                      Faculty
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('emi')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('emi') && <Check className="h-3 w-3" />}
-                      </div>
-                      EMI
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('transfer')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('transfer') && <Check className="h-3 w-3" />}
-                      </div>
-                      Transfer
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Custom Tag 2 Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Custom Tag 2 {tagFilters.length > 0 && `(${tagFilters.length})`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Custom Tag 2</DropdownMenuLabel>
-                  <Input
-                    placeholder="Search ..."
-                    className="mb-2"
-                  />
-                  <DropdownMenuItem onClick={() => toggleTagFilter('weekend-batch')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('weekend-batch') && <Check className="h-3 w-3" />}
-                      </div>
-                      Weekend Batch
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('exam-pattern')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('exam-pattern') && <Check className="h-3 w-3" />}
-                      </div>
-                      Exam Pattern
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('study-material')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('study-material') && <Check className="h-3 w-3" />}
-                      </div>
-                      Study Material
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('batch-start')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('batch-start') && <Check className="h-3 w-3" />}
-                      </div>
-                      Batch Start
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleTagFilter('placement')}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 border rounded flex items-center justify-center">
-                        {tagFilters.includes('placement') && <Check className="h-3 w-3" />}
-                      </div>
-                      Placement
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-
-              {/* Clear All Filters */}
-              {(searchQuery || statusFilter !== "all" || sourceFilters.length > 0 || tagFilters.length > 0) && (
+              {(searchQuery ||
+                statusFilter !== "all" ||
+                sourceFilters.length > 0 ||
+                termFilters.length > 0 ||
+                courseFilters.length > 0 ||
+                subjectFilters.length > 0 ||
+                facultyFilters.length > 0 ||
+                customTag1Filters.length > 0 ||
+                customTag2Filters.length > 0) && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="mr-2 h-4 w-4" />
                   Clear Filters
@@ -551,89 +215,75 @@ export default function NewCallsPage() {
           </div>
 
           <div className="rounded-md border">
-            <div className="max-h-[calc(100vh-300px)] overflow-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-muted">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4"
+                    />
+                  </TableHead>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Phone Number</TableHead>
+                  <TableHead>Query</TableHead>
+                  <TableHead>Tags</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCalls.length === 0 ? (
                   <TableRow>
-                    <TableHead>Customer Name</TableHead>
-                    <TableHead>Phone Number</TableHead>
-                    <TableHead className="w-[40%]">Query</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Tags</TableHead>
+                    <TableCell colSpan={6} className="text-center">No calls found.</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCalls.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center">
-                        No calls found.
+                ) : (
+                  filteredCalls.map((call) => (
+                    <TableRow key={call.id}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedCalls.includes(call.id)}
+                          onChange={() => toggleCallSelection(call.id)}
+                          className="h-4 w-4"
+                        />
+                      </TableCell>
+                      <TableCell>{call.name}</TableCell>
+                      <TableCell>{call.phone}</TableCell>
+                      <TableCell>{call.query}</TableCell>
+                      <TableCell>
+                        {call.tags?.map((tag) => (
+                          <Badge key={tag} variant="outline">{tag}</Badge>
+                        ))}
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredCalls.map((call) => (
-                      <TableRow key={call.id} onClick={() => handleTableRowClick(call.id)}>
-                        <TableCell className="font-medium">{call.name}</TableCell>
-                        <TableCell>{call.phoneNumber}</TableCell>
-                        <TableCell className="max-w-[400px]">
-                          <div className="line-clamp-2">{call.query}</div>
-                        </TableCell>
-                        <TableCell>{call.source}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {call.tags.slice(0, 2).map((tag, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {call.tags.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{call.tags.length - 2}
-                              </Badge>
-                            )}
-                            
-                            <Button id={`btn${call.id}`} variant="ghost" size="sm" asChild style={{ display: 'none' }}>
-                              <Link href={`/staff/calls/${call.id}`}>View</Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
       {/* Assign Calls Confirmation */}
-      {showAssignConfirm && (
+      {selectedCalls.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-2">Assign Calls</h3>
-            <p className="text-muted-foreground mb-4">
-              You are about to assign {selectedCalls.length} call{selectedCalls.length > 1 ? "s" : ""} to yourself.
-            </p>
-            <div className="py-2 max-h-[200px] overflow-auto">
-              <p>Selected calls:</p>
-              <ul className="mt-2 space-y-2">
-                {selectedCalls.map((id) => {
-                  const call = newCallsData.find((c) => c.id === id)
-                  return call ? (
-                    <li key={id} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>
-                        {call.name} - {call.phoneNumber}
-                      </span>
-                    </li>
-                  ) : null
-                })}
-              </ul>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => setShowAssignConfirm(false)}>
-                Cancel
-              </Button>
+            <p>You are about to assign {selectedCalls.length} calls to yourself.</p>
+            <ul className="mt-2">
+              {selectedCalls.map((id) => {
+                const call = filteredCalls.find((c) => c.id === id)
+                return call && (
+                  <li key={id} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {call.name} - {call.phone}
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="flex justify-end mt-4 gap-2">
+              <Button variant="outline" onClick={() => setSelectedCalls([])}>Cancel</Button>
               <Button onClick={handleAssignCalls}>Confirm Assignment</Button>
             </div>
           </div>
@@ -642,4 +292,3 @@ export default function NewCallsPage() {
     </div>
   )
 }
-
