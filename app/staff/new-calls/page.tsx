@@ -112,6 +112,7 @@ export default function NewCallsPage() {
       title: "Calls Assigned",
       description: `${selectedCalls.length} calls have been assigned.`,
     })
+    console.log(selectedCalls)
     setSelectedCalls([])
   }
 
