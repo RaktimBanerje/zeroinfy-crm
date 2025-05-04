@@ -1,53 +1,53 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react"
-import { Filter, Search, Check, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
-import { FilterDropdown } from "@/app/components/FilterDropdown"
-import SourceTabs from "../../components/SourceTabs"
-import directus from '../../../lib/directus'
-import { readItems } from "@directus/sdk"
+import { useEffect, useState } from "react";
+import { Filter, Search, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { FilterDropdown } from "@/app/components/FilterDropdown";
+import SourceTabs from "../../components/SourceTabs";
+import directus from '../../../lib/directus';
+import { readItems } from "@directus/sdk";
 
 export default function NewCallsPage() {
-  const { toast } = useToast()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [sourceFilters, setSourceFilters] = useState<string[]>([])
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilters, setSourceFilters] = useState([]);
 
   // 🧠 Individual tag filters per dropdown
-  const [termFilters, setTermFilters] = useState<string[]>([])
-  const [courseFilters, setCourseFilters] = useState<string[]>([])
-  const [subjectFilters, setSubjectFilters] = useState<string[]>([])
-  const [facultyFilters, setFacultyFilters] = useState<string[]>([])
-  const [customTag1Filters, setCustomTag1Filters] = useState<string[]>([])
-  const [customTag2Filters, setCustomTag2Filters] = useState<string[]>([])
+  const [termFilters, setTermFilters] = useState([]);
+  const [courseFilters, setCourseFilters] = useState([]);
+  const [subjectFilters, setSubjectFilters] = useState([]);
+  const [facultyFilters, setFacultyFilters] = useState([]);
+  const [customTag1Filters, setCustomTag1Filters] = useState([]);
+  const [customTag2Filters, setCustomTag2Filters] = useState([]);
 
-  const [allCalls, setAllCalls] = useState<any[]>([])
-  const [filteredCalls, setFilteredCalls] = useState<any[]>([])
-  const [selectedCalls, setSelectedCalls] = useState<string[]>([])
+  const [allCalls, setAllCalls] = useState([]);
+  const [filteredCalls, setFilteredCalls] = useState([]);
+  const [selectedCalls, setSelectedCalls] = useState([]);
 
   // Fetch leads from Directus
   const fetchLeads = async () => {
     try {
-      const data = await directus.request(readItems('leads'))
-      setAllCalls(data)
+      const data = await directus.request(readItems('leads'));
+      setAllCalls(data);
     } catch (error) {
-      console.error("Error fetching leads from Directus:", error)
+      console.error("Error fetching leads from Directus:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchLeads()
-  }, [])
+    fetchLeads();
+  }, []);
 
   // Filter calls based on all filters
   useEffect(() => {
-    let filtered = [...allCalls]
+    let filtered = [...allCalls];
 
     if (searchQuery) {
       filtered = filtered.filter(
@@ -55,15 +55,15 @@ export default function NewCallsPage() {
           call.phone?.includes(searchQuery) ||
           call.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           call.query?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      );
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((call) => call.status === statusFilter)
+      filtered = filtered.filter((call) => call.status === statusFilter);
     }
 
     if (sourceFilters.length > 0) {
-      filtered = filtered.filter((call) => sourceFilters.includes(call.source))
+      filtered = filtered.filter((call) => sourceFilters.includes(call.source));
     }
 
     // Tag filtering
@@ -74,17 +74,17 @@ export default function NewCallsPage() {
       facultyFilters,
       customTag1Filters,
       customTag2Filters,
-    ]
+    ];
 
     if (tagFilterGroups.some(group => group.length > 0)) {
       filtered = filtered.filter(call =>
         tagFilterGroups.every(group =>
           group.length === 0 || group.some(tag => call.tags?.includes(tag))
         )
-      )
+      );
     }
 
-    setFilteredCalls(filtered)
+    setFilteredCalls(filtered);
   }, [
     searchQuery,
     statusFilter,
@@ -96,39 +96,39 @@ export default function NewCallsPage() {
     customTag1Filters,
     customTag2Filters,
     allCalls,
-  ])
+  ]);
 
-  const toggleCallSelection = (callId: string) => {
+  const toggleCallSelection = (callId) => {
     setSelectedCalls((prev) =>
       prev.includes(callId) ? prev.filter((id) => id !== callId) : [...prev, callId]
-    )
-  }
+    );
+  };
 
   const toggleSelectAll = () => {
     setSelectedCalls((prev) =>
       prev.length === filteredCalls.length ? [] : filteredCalls.map((call) => call.id)
-    )
-  }
+    );
+  };
 
   const handleAssignCalls = () => {
     toast({
       title: "Calls Assigned",
       description: `${selectedCalls.length} calls have been assigned.`,
-    })
-    setSelectedCalls([])
-  }
+    });
+    setSelectedCalls([]);
+  };
 
   const clearFilters = () => {
-    setSearchQuery("")
-    setStatusFilter("all")
-    setSourceFilters([])
-    setTermFilters([])
-    setCourseFilters([])
-    setSubjectFilters([])
-    setFacultyFilters([])
-    setCustomTag1Filters([])
-    setCustomTag2Filters([])
-  }
+    setSearchQuery("");
+    setStatusFilter("all");
+    setSourceFilters([]);
+    setTermFilters([]);
+    setCourseFilters([]);
+    setSubjectFilters([]);
+    setFacultyFilters([]);
+    setCustomTag1Filters([]);
+    setCustomTag2Filters([]);
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -273,13 +273,13 @@ export default function NewCallsPage() {
             <p>You are about to assign {selectedCalls.length} calls to yourself.</p>
             <ul className="mt-2">
               {selectedCalls.map((id) => {
-                const call = filteredCalls.find((c) => c.id === id)
+                const call = filteredCalls.find((c) => c.id === id);
                 return call && (
                   <li key={id} className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
                     {call.name} - {call.phone}
                   </li>
-                )
+                );
               })}
             </ul>
             <div className="flex justify-end mt-4 gap-2">
@@ -290,5 +290,5 @@ export default function NewCallsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

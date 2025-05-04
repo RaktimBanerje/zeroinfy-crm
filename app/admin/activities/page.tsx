@@ -36,14 +36,7 @@ export default function NewCallsPage() {
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems("leads"))
-  
-      // Get the current user's email from localStorage
-      const userEmail = localStorage.getItem('userEmail')
-  
-      // Filter the leads where `tele_caller` is equal to the user's email
-      const filteredLeads = data.filter((lead: any) => lead.tele_caller === userEmail)
-  
-      setAllCalls(filteredLeads)
+      setAllCalls(data)
     } catch (error) {
       console.error("Error fetching leads from Directus:", error)
     }
@@ -143,55 +136,9 @@ export default function NewCallsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Staff Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <Button asChild>
-            <Link href="/staff/customers/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Customer
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/staff/customers/bulk-upload">
-              <Upload className="mr-2 h-4 w-4" />
-              Bulk Upload
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="bg-blue-50 dark:bg-blue-950/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Calls</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">42</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-amber-50 dark:bg-amber-950/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending Calls</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">18</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-green-50 dark:bg-green-950/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completed Calls</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">76</div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Dashboard</CardTitle>
+          <CardTitle>Call Management</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex overflow-x-auto pb-2">

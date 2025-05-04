@@ -1,267 +1,216 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useEffect, useState } from "react";
+import { Filter, Search, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { FilterDropdown } from "@/app/components/FilterDropdown";
+import SourceTabs from "../../components/SourceTabs";
+import directus from '../../../lib/directus';
+import { readItems } from "@directus/sdk";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { ChevronDown, Download, Plus, Search, Upload } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { type Customer, getCustomers, getTagsByType, exportCustomersToCSV } from "@/lib/data-service"
-import { useToast } from "@/components/ui/use-toast"
+export default function NewCallsPage() {
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilters, setSourceFilters] = useState([]);
 
-export default function CustomersPage() {
-  const { toast } = useToast()
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [courseFilter, setCourseFilter] = useState("")
-  const [subjectFilter, setSubjectFilter] = useState("")
-  const [termFilter, setTermFilter] = useState("")
-  const [courseTags, setCourseTags] = useState<{ id: string; name: string }[]>([])
-  const [subjectTags, setSubjectTags] = useState<{ id: string; name: string }[]>([])
-  const [termTags, setTermTags] = useState<{ id: string; name: string }[]>([])
+  // 🧠 Individual tag filters per dropdown
+  const [termFilters, setTermFilters] = useState([]);
+  const [courseFilters, setCourseFilters] = useState([]);
+  const [subjectFilters, setSubjectFilters] = useState([]);
+  const [facultyFilters, setFacultyFilters] = useState([]);
+  const [customTag1Filters, setCustomTag1Filters] = useState([]);
+  const [customTag2Filters, setCustomTag2Filters] = useState([]);
 
-  useEffect(() => {
-    // Load customers
-    const allCustomers = getCustomers()
-    setCustomers(allCustomers)
+  const [allCalls, setAllCalls] = useState([]);
+  const [filteredCalls, setFilteredCalls] = useState([]);
+  const [selectedCalls, setSelectedCalls] = useState([]);
 
-    // Load tags
-    setCourseTags(getTagsByType("course"))
-    setSubjectTags(getTagsByType("subject"))
-    setTermTags(getTagsByType("term"))
-
-    // Initial filtering
-    filterCustomers(allCustomers)
-  }, [])
+  // Fetch leads from Directus
+  const fetchLeads = async () => {
+    try {
+      const data = await directus.request(readItems('leads'));
+      setAllCalls(data);
+    } catch (error) {
+      console.error("Error fetching leads from Directus:", error);
+    }
+  };
 
   useEffect(() => {
-    // Filter customers when filters change
-    filterCustomers(customers)
-  }, [searchQuery, statusFilter, courseFilter, subjectFilter, termFilter])
+    fetchLeads();
+  }, []);
 
-  const filterCustomers = (customersList: Customer[]) => {
-    let filtered = [...customersList]
+  // Filter calls based on all filters
+  useEffect(() => {
+    let filtered = [...allCalls];
 
-    // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (customer) =>
-          customer.name.toLowerCase().includes(query) ||
-          customer.phoneNumber.includes(query) ||
-          customer.email.toLowerCase().includes(query),
-      )
+        (call) =>
+          call.phone?.includes(searchQuery) ||
+          call.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          call.query?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((customer) => customer.status === statusFilter)
-    }
-
-    // Apply course filter
-    if (courseFilter) {
-      filtered = filtered.filter((customer) => customer.tags.course === courseFilter)
-    }
-
-    // Apply subject filter
-    if (subjectFilter) {
-      filtered = filtered.filter((customer) => customer.tags.subject === subjectFilter)
-    }
-
-    // Apply term filter
-    if (termFilter) {
-      filtered = filtered.filter((customer) => customer.tags.term === termFilter)
-    }
-
-    setFilteredCustomers(filtered)
-  }
-
-  // Handle export to CSV
-  const handleExport = () => {
-    // Create filters object
-    const filters: any = {}
 
     if (statusFilter !== "all") {
-      filters.status = statusFilter
+      filtered = filtered.filter((call) => call.status === statusFilter);
     }
 
-    if (courseFilter || subjectFilter || termFilter) {
-      filters.tags = {}
-
-      if (courseFilter) {
-        filters.tags.course = courseFilter
-      }
-
-      if (subjectFilter) {
-        filters.tags.subject = subjectFilter
-      }
-
-      if (termFilter) {
-        filters.tags.term = termFilter
-      }
+    if (sourceFilters.length > 0) {
+      filtered = filtered.filter((call) => sourceFilters.includes(call.source));
     }
 
-    // Export to CSV
-    const csvContent = exportCustomersToCSV(filters)
+    // Tag filtering
+    const tagFilterGroups = [
+      termFilters,
+      courseFilters,
+      subjectFilters,
+      facultyFilters,
+      customTag1Filters,
+      customTag2Filters,
+    ];
 
-    // Create a blob and download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", "customers.csv")
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    if (tagFilterGroups.some(group => group.length > 0)) {
+      filtered = filtered.filter(call =>
+        tagFilterGroups.every(group =>
+          group.length === 0 || group.some(tag => call.tags?.includes(tag))
+        )
+      );
+    }
 
+    setFilteredCalls(filtered);
+  }, [
+    searchQuery,
+    statusFilter,
+    sourceFilters,
+    termFilters,
+    courseFilters,
+    subjectFilters,
+    facultyFilters,
+    customTag1Filters,
+    customTag2Filters,
+    allCalls,
+  ]);
+
+  const toggleCallSelection = (callId) => {
+    setSelectedCalls((prev) =>
+      prev.includes(callId) ? prev.filter((id) => id !== callId) : [...prev, callId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedCalls((prev) =>
+      prev.length === filteredCalls.length ? [] : filteredCalls.map((call) => call.id)
+    );
+  };
+
+  const handleAssignCalls = () => {
     toast({
-      title: "Export successful",
-      description: `${filteredCustomers.length} customers exported to CSV`,
-    })
-  }
+      title: "Calls Assigned",
+      description: `${selectedCalls.length} calls have been assigned.`,
+    });
+    setSelectedCalls([]);
+  };
 
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "New":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-      case "Closed":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "Sold":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-    }
-  }
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setSourceFilters([]);
+    setTermFilters([]);
+    setCourseFilters([]);
+    setSubjectFilters([]);
+    setFacultyFilters([]);
+    setCustomTag1Filters([]);
+    setCustomTag2Filters([]);
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Customers</h1>
-        <div className="flex items-center gap-2">
-          <Button asChild>
-            <Link href="/admin/customers/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Customer
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin/bulk-upload">
-              <Upload className="mr-2 h-4 w-4" />
-              Bulk Upload
-            </Link>
-          </Button>
-        </div>
-      </div>
-
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Customer Management</CardTitle>
+        <CardHeader>
+          <CardTitle>All Calls</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, phone or email..."
-                  className="w-full md:w-[300px]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handleExport}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export
-                </Button>
-              </div>
+          <div className="mb-4 flex items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone or query..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full md:w-[300px]"
+              />
             </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <FilterDropdown
+                label="Term"
+                collection="terms"
+                tagFilters={termFilters}
+                toggleTagFilter={(tag) =>
+                  setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Course"
+                collection="courses"
+                tagFilters={courseFilters}
+                toggleTagFilter={(tag) =>
+                  setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Subject"
+                collection="subjects"
+                tagFilters={subjectFilters}
+                toggleTagFilter={(tag) =>
+                  setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Faculty"
+                collection="faculties"
+                tagFilters={facultyFilters}
+                toggleTagFilter={(tag) =>
+                  setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Custom Tag 1"
+                collection="custom_tags_one"
+                tagFilters={customTag1Filters}
+                toggleTagFilter={(tag) =>
+                  setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
+              <FilterDropdown
+                label="Custom Tag 2"
+                collection="custom_tags_two"
+                tagFilters={customTag2Filters}
+                toggleTagFilter={(tag) =>
+                  setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                }
+              />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div>
-                <Label>Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="New">New</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Closed">Closed</SelectItem>
-                    <SelectItem value="Sold">Sold</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Course</Label>
-                <Select value={courseFilter} onValueChange={setCourseFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Courses</SelectItem>
-                    {courseTags.map((tag) => (
-                      <SelectItem key={tag.id} value={tag.name}>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Subject</Label>
-                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Subjects</SelectItem>
-                    {subjectTags.map((tag) => (
-                      <SelectItem key={tag.id} value={tag.name}>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Term</Label>
-                <Select value={termFilter} onValueChange={setTermFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by term" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Terms</SelectItem>
-                    {termTags.map((tag) => (
-                      <SelectItem key={tag.id} value={tag.name}>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {(searchQuery ||
+                statusFilter !== "all" ||
+                sourceFilters.length > 0 ||
+                termFilters.length > 0 ||
+                courseFilters.length > 0 ||
+                subjectFilters.length > 0 ||
+                facultyFilters.length > 0 ||
+                customTag1Filters.length > 0 ||
+                customTag2Filters.length > 0) && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="mr-2 h-4 w-4" />
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
 
@@ -269,88 +218,27 @@ export default function CustomersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Follow-up</TableHead>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Phone Number</TableHead>
+                  <TableHead>Query</TableHead>
                   <TableHead>Tags</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCustomers.length === 0 ? (
+                {filteredCalls.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
-                      No customers found.
-                    </TableCell>
+                    <TableCell colSpan={6} className="text-center">No calls found.</TableCell>
                   </TableRow>
                 ) : (
-                  filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
+                  filteredCalls.map((call) => (
+                    <TableRow key={call.id}>
+                      <TableCell>{call.name}</TableCell>
+                      <TableCell>{call.phone}</TableCell>
+                      <TableCell>{call.query}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-gradient-to-r from-pink-500 to-violet-500 text-white">
-                              {customer.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{customer.name}</div>
-                            <div className="text-xs text-muted-foreground truncate max-w-[150px]">{customer.query}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{customer.phoneNumber}</div>
-                        <div className="text-xs text-muted-foreground">{customer.email}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(customer.status)}>{customer.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">Level {customer.followUpLevel}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {customer.tags.course && (
-                            <Badge variant="outline" className="text-xs">
-                              {customer.tags.course}
-                            </Badge>
-                          )}
-                          {customer.tags.term && (
-                            <Badge variant="outline" className="text-xs">
-                              {customer.tags.term}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{new Date(customer.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/admin/customers/${customer.id}`}>View</Link>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <ChevronDown className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/customers/${customer.id}`}>View Details</Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>Add Task</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        {call.tags?.map((tag) => (
+                          <Badge key={tag} variant="outline">{tag}</Badge>
+                        ))}
                       </TableCell>
                     </TableRow>
                   ))
@@ -360,11 +248,31 @@ export default function CustomersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Assign Calls Confirmation */}
+      {selectedCalls.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-2">Assign Calls</h3>
+            <p>You are about to assign {selectedCalls.length} calls to yourself.</p>
+            <ul className="mt-2">
+              {selectedCalls.map((id) => {
+                const call = filteredCalls.find((c) => c.id === id);
+                return call && (
+                  <li key={id} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {call.name} - {call.phone}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="flex justify-end mt-4 gap-2">
+              <Button variant="outline" onClick={() => setSelectedCalls([])}>Cancel</Button>
+              <Button onClick={handleAssignCalls}>Confirm Assignment</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }
-
-function Label({ children }: { children: React.ReactNode }) {
-  return <div className="text-sm font-medium leading-none mb-2">{children}</div>
-}
-

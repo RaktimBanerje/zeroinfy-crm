@@ -1,32 +1,27 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
-  AlertCircle,
   Check,
-  X,
   FileSpreadsheet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import Papa from "papaparse"
 import axios from "axios"
 
 export default function BulkUploadPage() {
   const { toast } = useToast()
-  const [file, setFile] = useState<File | null>(null)
-  const [step, setStep] = useState<"upload" | "complete">("upload")
+  const [file, setFile] = useState(null)
+  const [step, setStep] = useState("upload")
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState<string | null>(null)
+  const [uploadStatus, setUploadStatus] = useState(null)
 
-  // Just selects the file
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
@@ -34,19 +29,17 @@ export default function BulkUploadPage() {
     }
   }
 
-  // Handles drag and drop
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e) => {
     e.preventDefault()
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setFile(e.dataTransfer.files[0])
     }
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e) => {
     e.preventDefault()
   }
 
-  // Actual import logic on button click
   const handleContinueUpload = () => {
     if (!file) return
 
@@ -59,23 +52,18 @@ export default function BulkUploadPage() {
         const csvData = result.data
 
         for (let row of csvData) {
-
-          console.log(row)
-
           const leadData = {
             name: row.Name,
             email: row.Email,
             phone: row.Phone,
             query: row.Query,
             tags: typeof row.Tags === "string"
-            ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
-            : [],
+              ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
+              : [],
           }
 
-          // console.log(leadData)
-
           try {
-            await axios.post("http://zeroinfy.thinksurfmedia.in:8055/items/leads", leadData)
+            await axios.post("https://zeroinfy.thinksurfmedia.in/items/leads", leadData)
           } catch (error) {
             console.error("Error adding lead:", error)
           }

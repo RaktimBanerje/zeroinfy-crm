@@ -1,429 +1,266 @@
-"use client"
+ "use client"
 
-import { useState, useEffect } from "react"
-import { Plus, Search, Edit, Trash, TagIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getTagsByType, addTag, updateTag, deleteTag } from "@/lib/data-service"
+import { useState, useEffect } from "react"
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs"
+import directus from "@/lib/directus"
+import { readItems } from "@directus/sdk"
+import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
 
-export default function TagsPage() {
+export default function TagManagement() {
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState("course")
-  const [tags, setTags] = useState([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filteredTags, setFilteredTags] = useState([])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedTag, setSelectedTag] = useState(null)
-  const [parentTags, setParentTags] = useState([])
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "course",
-    parentId: "",
-  })
+
+  const [activeTab, setActiveTab] = useState("courses")
+  const [courses, setCourses] = useState([])
+  const [subjects, setSubjects] = useState([])
+  const [terms, setTerms] = useState([])
+  const [faculties, setFaculties] = useState([])
+  const [customTagsOne, setCustomTagsOne] = useState([])
+  const [customTagsTwo, setCustomTagsTwo] = useState([])
+
+  const [openModal, setOpenModal] = useState(false)
+  const [currentTag, setCurrentTag] = useState<any>(null)
+  const [tagName, setTagName] = useState("")
+  const [tagCategory, setTagCategory] = useState("custom_tags_one")
+  const [isNewTag, setIsNewTag] = useState(false)
+
+  const fetchData = async (collection: string) => {
+    try {
+      const data = await directus.request(readItems(collection))
+      switch (collection) {
+        case "courses":
+          setCourses(data)
+          break
+        case "subjects":
+          setSubjects(data)
+          break
+        case "terms":
+          setTerms(data)
+          break
+        case "faculties":
+          setFaculties(data)
+          break
+        case "custom_tags_one":
+          setCustomTagsOne(data)
+          break
+        case "custom_tags_two":
+          setCustomTagsTwo(data)
+          break
+        default:
+          break
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch data for this tab.",
+        variant: "destructive",
+      })
+    }
+  }
 
   useEffect(() => {
-    // Load tags based on active tab
-    loadTags()
+    fetchData(activeTab)
   }, [activeTab])
 
-  useEffect(() => {
-    // Filter tags when search query changes
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      const filtered = tags.filter((tag) => tag.name.toLowerCase().includes(query))
-      setFilteredTags(filtered)
-    } else {
-      setFilteredTags(tags)
-    }
-  }, [searchQuery, tags])
+  const handleEditTag = (tag: any, category: string) => {
+    setCurrentTag(tag)
+    setTagName(tag.name)
+    setTagCategory(category)
+    setIsNewTag(false)
+    setOpenModal(true)
+  }
 
-  const loadTags = () => {
-    const tagsByType = getTagsByType(activeTab)
-    setTags(tagsByType)
-    setFilteredTags(tagsByType)
+  const handleCreateNewTag = () => {
+    setTagName("")
+    setTagCategory(activeTab)
+    setIsNewTag(true)
+    setOpenModal(true)
+  }
 
-    // Load parent tags if needed
-    if (activeTab === "subject") {
-      setParentTags(getTagsByType("course"))
-    } else {
-      setParentTags([])
+  const handleDeleteTag = async (tag: any, category: string) => {
+    try {
+      await directus.items(category).deleteOne(tag.id)
+      toast({ title: "Deleted", description: "Tag deleted successfully", variant: "success" })
+      fetchData(category)
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete tag", variant: "destructive" })
     }
   }
 
-  const handleAddTag = () => {
+  const handleSaveTag = async () => {
     try {
-      // Validate form
-      if (!formData.name) {
-        toast({
-          title: "Error",
-          description: "Please enter a tag name",
-          variant: "destructive",
+      const payload = { name: tagName }
+      
+      const apiUrl = `https://zeroinfy.thinksurfmedia.in/items/${tagCategory}`
+  
+      if (isNewTag) {
+        // Create new tag using POST request
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`, // Add token if required
+          },
+          body: JSON.stringify(payload),
         })
-        return
-      }
-
-      // Add tag
-      const newTag = addTag({
-        name: formData.name,
-        type: activeTab,
-        parentId: activeTab === "subject" ? formData.parentId : undefined,
-      })
-
-      // Update state
-      setTags([...tags, newTag])
-      setIsAddDialogOpen(false)
-
-      // Reset form
-      setFormData({
-        name: "",
-        type: activeTab,
-        parentId: "",
-      })
-
-      toast({
-        title: "Success",
-        description: "Tag added successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleEditTag = () => {
-    try {
-      // Validate form
-      if (!formData.name) {
+  
+        if (!response.ok) {
+          throw new Error("Failed to create the tag")
+        }
+  
         toast({
-          title: "Error",
-          description: "Please enter a tag name",
-          variant: "destructive",
+          title: "Success",
+          description: "Tag created successfully",
+          variant: "success",
         })
-        return
+      } else {
+        // Update existing tag using PATCH request
+        const response = await fetch(`https://zeroinfy.thinksurfmedia.in/items/${tagCategory}/${currentTag.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`, // Add token if required
+          },
+          body: JSON.stringify(payload),
+        })
+  
+        if (!response.ok) {
+          throw new Error("Failed to update the tag")
+        }
+  
+        toast({
+          title: "Success",
+          description: "Tag updated successfully",
+          variant: "success",
+        })
       }
-
-      // Update tag
-      const updatedTag = updateTag(selectedTag.id, {
-        name: formData.name,
-        parentId: activeTab === "subject" ? formData.parentId : undefined,
-      })
-
-      // Update state
-      setTags(tags.map((tag) => (tag.id === selectedTag.id ? updatedTag : tag)))
-      setIsEditDialogOpen(false)
-
-      toast({
-        title: "Success",
-        description: "Tag updated successfully",
-      })
+  
+      setOpenModal(false)
+      setTagName("")
+      setCurrentTag(null)
+      fetchData(tagCategory) // Re-fetch data after saving the tag
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save tag",
         variant: "destructive",
       })
     }
   }
 
-  const handleDeleteTag = () => {
-    try {
-      // Delete tag
-      deleteTag(selectedTag.id)
-
-      // Update state
-      setTags(tags.filter((tag) => tag.id !== selectedTag.id))
-      setIsDeleteDialogOpen(false)
-
-      toast({
-        title: "Success",
-        description: "Tag deleted successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  const openEditDialog = (tag) => {
-    setSelectedTag(tag)
-    setFormData({
-      name: tag.name,
-      type: tag.type,
-      parentId: tag.parentId || "",
-    })
-    setIsEditDialogOpen(true)
-  }
-
-  const openDeleteDialog = (tag) => {
-    setSelectedTag(tag)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const getTagTypeLabel = (type) => {
-    switch (type) {
-      case "course":
-        return "Course"
-      case "subject":
-        return "Subject"
-      case "term":
-        return "Term"
-      case "faculty":
-        return "Faculty"
-      case "custom":
-        return "Custom"
-      default:
-        return type
-    }
-  }
-
-  const getTagTypeColor = (type) => {
-    switch (type) {
-      case "course":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      case "subject":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "term":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-      case "faculty":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-      case "custom":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-    }
-  }
+  const renderTable = (data: any[], category: string) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((tag) => (
+          <TableRow key={tag.id}>
+            <TableCell>{tag.name}</TableCell>
+            <TableCell className="space-x-2">
+              <Button size="sm" onClick={() => handleEditTag(tag, category)}>
+                Edit
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => handleDeleteTag(tag, category)}>
+                Delete
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Tag Management</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Tag
-        </Button>
-      </div>
+      <h1 className="text-3xl font-bold">Tag Management</h1>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Tags</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="course" onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="course">Courses</TabsTrigger>
-              <TabsTrigger value="subject">Subjects</TabsTrigger>
-              <TabsTrigger value="term">Terms</TabsTrigger>
-              <TabsTrigger value="faculty">Faculty</TabsTrigger>
-              <TabsTrigger value="custom">Custom</TabsTrigger>
-            </TabsList>
+      <Button onClick={handleCreateNewTag} variant="outline" size="sm" className="mb-4">
+        Add New Tag
+      </Button>
 
-            <div className="mb-4 flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tags..."
-                className="w-full md:w-[300px]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+      <Tabs defaultValue="courses" onValueChange={setActiveTab} value={activeTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="courses">Courses</TabsTrigger>
+          <TabsTrigger value="subjects">Subjects</TabsTrigger>
+          <TabsTrigger value="terms">Terms</TabsTrigger>
+          <TabsTrigger value="faculties">Faculties</TabsTrigger>
+          <TabsTrigger value="custom_tags_one">Custom Tags One</TabsTrigger>
+          <TabsTrigger value="custom_tags_two">Custom Tags Two</TabsTrigger>
+        </TabsList>
 
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    {activeTab === "subject" && <TableHead>Parent Course</TableHead>}
-                    <TableHead>Type</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTags.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={activeTab === "subject" ? 4 : 3} className="text-center">
-                        No tags found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredTags.map((tag) => (
-                      <TableRow key={tag.id}>
-                        <TableCell className="font-medium">{tag.name}</TableCell>
-                        {activeTab === "subject" && (
-                          <TableCell>
-                            {tag.parentId ? parentTags.find((p) => p.id === tag.parentId)?.name || "Unknown" : "None"}
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <Badge className={getTagTypeColor(tag.type)}>{getTagTypeLabel(tag.type)}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(tag)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(tag)}>
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <TabsContent value="courses">{renderTable(courses, "courses")}</TabsContent>
+        <TabsContent value="subjects">{renderTable(subjects, "subjects")}</TabsContent>
+        <TabsContent value="terms">{renderTable(terms, "terms")}</TabsContent>
+        <TabsContent value="faculties">{renderTable(faculties, "faculties")}</TabsContent>
+        <TabsContent value="custom_tags_one">{renderTable(customTagsOne, "custom_tags_one")}</TabsContent>
+        <TabsContent value="custom_tags_two">{renderTable(customTagsTwo, "custom_tags_two")}</TabsContent>
+      </Tabs>
 
-      {/* Add Tag Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add {getTagTypeLabel(activeTab)}</DialogTitle>
-            <DialogDescription>Add a new {getTagTypeLabel(activeTab).toLowerCase()} tag.</DialogDescription>
+            <DialogTitle>{isNewTag ? "Create New Tag" : "Edit Tag"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
+          <DialogDescription className="space-y-4">
+            <div>
+              <Label htmlFor="tagName">Tag Name</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="tagName"
+                value={tagName}
+                onChange={(e) => setTagName(e.target.value)}
+                placeholder="Enter tag name"
               />
             </div>
-            {activeTab === "subject" && (
-              <div className="grid gap-2">
-                <Label htmlFor="parentId">Parent Course</Label>
-                <Select
-                  value={formData.parentId}
-                  onValueChange={(value) => setFormData({ ...formData, parentId: value })}
-                >
-                  <SelectTrigger id="parentId">
-                    <SelectValue placeholder="Select parent course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {parentTags.map((parent) => (
-                      <SelectItem key={parent.id} value={parent.id}>
-                        {parent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddTag}>Add {getTagTypeLabel(activeTab)}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Tag Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit {selectedTag && getTagTypeLabel(selectedTag.type)}</DialogTitle>
-            <DialogDescription>Update tag information.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+            <div>
+              <Label htmlFor="tagCategory">Tag Category</Label>
+              <select
+                id="tagCategory"
+                value={tagCategory}
+                onChange={(e) => setTagCategory(e.target.value)}
+                className="w-full border border-input rounded px-2 py-1"
+              >
+                <option value="courses">Courses</option>
+                <option value="subjects">Subjects</option>
+                <option value="terms">Terms</option>
+                <option value="faculties">Faculties</option>
+                <option value="custom_tags_one">Custom Tags One</option>
+                <option value="custom_tags_two">Custom Tags Two</option>
+              </select>
             </div>
-            {activeTab === "subject" && (
-              <div className="grid gap-2">
-                <Label htmlFor="edit-parentId">Parent Course</Label>
-                <Select
-                  value={formData.parentId}
-                  onValueChange={(value) => setFormData({ ...formData, parentId: value })}
-                >
-                  <SelectTrigger id="edit-parentId">
-                    <SelectValue placeholder="Select parent course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {parentTags.map((parent) => (
-                      <SelectItem key={parent.id} value={parent.id}>
-                        {parent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
+          </DialogDescription>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="secondary" onClick={() => setOpenModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleEditTag}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Tag Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Tag</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this tag? This action cannot be undone.
-              {activeTab === "course" && (
-                <p className="mt-2 text-red-500">
-                  Warning: Deleting a course will also delete all subjects associated with it.
-                </p>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center gap-3 py-4">
-            {selectedTag && (
-              <>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <TagIcon className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="font-medium">{selectedTag.name}</div>
-                  <div className="text-sm text-muted-foreground">{getTagTypeLabel(selectedTag.type)}</div>
-                </div>
-              </>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteTag}>
-              Delete
+            <Button onClick={handleSaveTag}>
+              {isNewTag ? "Create" : "Save"} Tag
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -431,4 +268,3 @@ export default function TagsPage() {
     </div>
   )
 }
-

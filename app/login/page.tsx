@@ -22,10 +22,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const staticUsers = {
-    admin: { email: "admin@example.com", password: "admin123" },
+    admin: { email: "admin@example.com", password: "123456789" },
     staff: [
-      { email: "arka@gmail.com", password: "staff123" },
-      { email: "raktimbanerjee9@gmail.com", password: "staff123" },
+      { email: "arka@gmail.com", password: "123456789" },
+      { email: "raktimbanerjee9@gmail.com", password: "123456789" },
     ],
   }
 

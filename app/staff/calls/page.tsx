@@ -36,12 +36,19 @@ export default function NewCallsPage() {
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems("leads"))
-      setAllCalls(data)
+  
+      // Get the current user's email from localStorage
+      const userEmail = localStorage.getItem('userEmail')
+  
+      // Filter the leads where `tele_caller` is equal to the user's email
+      const filteredLeads = data.filter((lead: any) => lead.tele_caller === userEmail)
+  
+      setAllCalls(filteredLeads)
     } catch (error) {
       console.error("Error fetching leads from Directus:", error)
     }
   }
-
+  
   useEffect(() => {
     fetchLeads()
   }, [])

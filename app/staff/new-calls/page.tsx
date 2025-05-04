@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { FilterDropdown } from "@/app/components/FilterDropdown"
 import SourceTabs from "../../components/SourceTabs"
 import directus from "../../../lib/directus"
-import { readItems } from "@directus/sdk"
+import { readItems, updateItem } from "@directus/sdk"
 
 export default function NewCallsPage() {
   const { toast } = useToast()
@@ -31,10 +31,16 @@ export default function NewCallsPage() {
   const [filteredCalls, setFilteredCalls] = useState<any[]>([])
   const [selectedCalls, setSelectedCalls] = useState<string[]>([])
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems("leads"))
-      setAllCalls(data)
+      
+      // Filter the leads where `tele_caller` is null or an empty string
+      const filteredLeads = data.filter((lead: any) => !lead.tele_caller)
+  
+      setAllCalls(filteredLeads)
     } catch (error) {
       console.error("Error fetching leads from Directus:", error)
     }
@@ -107,13 +113,30 @@ export default function NewCallsPage() {
     )
   }
 
-  const handleAssignCalls = () => {
-    toast({
-      title: "Calls Assigned",
-      description: `${selectedCalls.length} calls have been assigned.`,
-    })
-    console.log(selectedCalls)
-    setSelectedCalls([])
+  const handleAssignCalls = async () => {
+    const userEmail = localStorage.getItem('userEmail') // Get the user's email from localStorage
+    if (!userEmail) {
+      toast({ title: "Error", description: "User email not found." })
+      return
+    }
+
+    try {
+      // Update each selected call with the `tele_caller` field
+      for (const callId of selectedCalls) {
+        await directus.request(updateItem("leads", callId, { tele_caller: userEmail }))
+      }
+
+      toast({
+        title: "Calls Assigned",
+        description: `${selectedCalls.length} calls have been assigned to you.`,
+      })
+      setSelectedCalls([])  // Clear the selected calls
+      setIsModalOpen(false)  // Close the modal
+      fetchLeads()
+    } catch (error) {
+      console.error("Error assigning calls:", error)
+      toast({ title: "Error", description: "An error occurred while assigning calls." })
+    }
   }
 
   const clearFilters = () => {
@@ -239,8 +262,15 @@ export default function NewCallsPage() {
         </CardContent>
       </Card>
 
-      {/* Confirmation Modal */}
+      {/* "Assign Me" Button */}
       {selectedCalls.length > 0 && (
+        <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+          Assign Me
+        </Button>
+      )}
+
+      {/* Confirmation Modal */}
+      {isModalOpen && selectedCalls.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-2">Assign Calls</h3>
@@ -257,7 +287,7 @@ export default function NewCallsPage() {
               })}
             </ul>
             <div className="flex justify-end mt-4 gap-2">
-              <Button variant="outline" onClick={() => setSelectedCalls([])}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button onClick={handleAssignCalls}>Confirm Assignment</Button>
             </div>
           </div>

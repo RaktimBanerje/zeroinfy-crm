@@ -125,7 +125,7 @@ export default function NewCustomerPage() {
 
       console.log(payload)
 
-      await axios.post("http://zeroinfy.thinksurfmedia.in:8055/items/leads", payload)
+      await axios.post("https://zeroinfy.thinksurfmedia.in/items/leads", payload)
       
       router.push("/staff/dashboard")
 

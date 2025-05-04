@@ -5,10 +5,21 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Phone } from "lucide-react"
+import { LogOut, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useToast } from "@/components/ui/use-toast"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { AvatarImage } from "@radix-ui/react-avatar"
+import { useRouter } from "next/navigation"
 
 // Dummy data for new calls
 const newCallsData = [
@@ -60,6 +71,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const { toast } = useToast()
   const [newCalls, setNewCalls] = useState(newCallsData)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const router = useRouter()
 
   // Refresh new calls every 30 seconds
   useEffect(() => {
@@ -87,15 +99,26 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     console.log(`Assigned call ${call.id} to current staff`)
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("userType")
+    localStorage.removeItem("userEmail")
+    localStorage.removeItem("userName")
+
+    toast({
+      title: "Logged out",
+      description: "You have been logged out successfully",
+    })
+
+    router.push("/login")
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-10 border-b bg-background">
         <div className="flex h-16 items-center px-4 md:px-6">
-          <Link href="/staff/dashboard" className="flex items-center gap-2 font-semibold">
-            <span className="text-primary">Zeroinfy</span>
-            <span className="text-sm text-muted-foreground">Staff Portal</span>
-          </Link>
+          <a className="flex items-center gap-2" href="/staff/dashboard"><div className="rounded-full bg-gradient-to-r from-pink-500 to-violet-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-phone h-5 w-5 text-white"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div><h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">Zeroinfy CRM</h1><div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ml-2 bg-gradient-to-r from-pink-500 to-violet-500">Staff</div></a>
           <nav className="ml-auto flex items-center gap-4 md:gap-6">
             <Link
               href="/staff/dashboard"
@@ -119,7 +142,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 pathname.startsWith("/staff/all-calls") ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Leads
+              Customers
             </Link>
             <Button variant="outline" asChild>
             
@@ -184,9 +207,28 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     }
   }
 `}</style>
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>JS</AvatarFallback>
-            </Avatar>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8 border-2 border-pink-500">
+                  <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                  <AvatarFallback className="bg-gradient-to-r from-pink-500 to-violet-500 text-white">
+                    {"A"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           </nav>
         </div>
       </header>

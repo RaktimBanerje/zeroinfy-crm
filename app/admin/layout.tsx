@@ -65,9 +65,10 @@ export default function AdminLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: Home },
+    { name: "Activities", href: "/admin/activities", icon: Phone },
     { name: "Customers", href: "/admin/customers", icon: Users },
-    { name: "Calls", href: "/admin/calls", icon: Phone },
-    { name: "Tasks", href: "/admin/tasks", icon: FileText },
+    // { name: "Calls", href: "/admin/calls", icon: Phone },
+    // { name: "Tasks", href: "/admin/tasks", icon: FileText },
     { name: "Reports", href: "/admin/reports", icon: BarChart },
     {
       name: "Management",
@@ -77,6 +78,7 @@ export default function AdminLayout({
         { name: "Users", href: "/admin/users", icon: User },
         { name: "Tags", href: "/admin/tags", icon: Tag },
         { name: "Sources", href: "/admin/sources", icon: FileText },
+        { name: "Followup Levels", href: "/admin/followup-levels", icon: FileText },
       ],
     },
   ]
@@ -101,20 +103,6 @@ export default function AdminLayout({
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" className="hidden md:flex" asChild>
-            <Link href="/admin/customers/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Customer
-            </Link>
-          </Button>
-
-          <Button variant="outline" size="sm" className="hidden md:flex" asChild>
-            <Link href="/admin/bulk-upload">
-              <Upload className="mr-2 h-4 w-4" />
-              Bulk Upload
-            </Link>
-          </Button>
-
           <Button variant="outline" className="relative" size="icon">
             <Bell className="h-5 w-5" />
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs text-white">
@@ -137,18 +125,7 @@ export default function AdminLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/admin/profile">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </DropdownMenuItem>
+              
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
