@@ -222,14 +222,6 @@ export default function NewCallsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">
-                    <input
-                      type="checkbox"
-                      checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4"
-                    />
-                  </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
                   <TableHead style={{width: '40%'}}>Query</TableHead>
@@ -248,21 +240,14 @@ export default function NewCallsPage() {
                     <TableRow
                       key={call.id}
                       className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                      onClick={() => handleRowClick(call.id)}
                     >
+                      <TableCell>{call.name}</TableCell>
+                      <TableCell>{call.phone}</TableCell>
+                      <TableCell style={{width: '40%'}}>{call.query}</TableCell>
+                      <TableCell>{call.source}</TableCell>
+                      <TableCell>{call.followup_level}</TableCell>
                       <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedCalls.includes(call.id)}
-                          onChange={() => toggleCallSelection(call.id)}
-                          className="h-4 w-4"
-                        />
-                      </TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}>{call.name}</TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}>{call.phone}</TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}style={{width: '40%'}}>{call.query}</TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}>{call.source}</TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}>{call.followup_level}</TableCell>
-                      <TableCell onClick={() => handleRowClick(call.id)}>
                         {call.tags?.map((tag) => (
                           <Badge key={tag} variant="outline">{tag}</Badge>
                         ))}

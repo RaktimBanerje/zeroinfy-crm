@@ -12,7 +12,7 @@ import { FilterDropdown } from "@/app/components/FilterDropdown"
 import SourceTabs from "../../components/SourceTabs"
 import FollowupLevelTabs from "@/app/components/FollowupLevelTabs"
 import directus from '../../../lib/directus'
-import { readItems } from "@directus/sdk"
+import { readItems, updateItem } from "@directus/sdk"
 import Link from "next/link"
 
 export default function NewCallsPage() {
@@ -33,6 +33,10 @@ export default function NewCallsPage() {
   const [filteredCalls, setFilteredCalls] = useState<any[]>([])
   const [selectedCalls, setSelectedCalls] = useState<string[]>([])
 
+  const [users, setUsers] = useState<any[]>([])  // Users state to hold the list of users
+  const [selectedUser, setSelectedUser] = useState<string | null>(null)  // Track the selected user
+  const [isModalOpen, setIsModalOpen] = useState(false)  // Control modal visibility
+
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems("leads"))
@@ -42,8 +46,24 @@ export default function NewCallsPage() {
     }
   }
 
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("https://zeroinfy.thinksurfmedia.in/users", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`,
+        },
+      })
+      const data = await response.json()
+      setUsers(data.data)
+    } catch (error) {
+      console.error("Error fetching users:", error)
+    }
+  }
+
   useEffect(() => {
     fetchLeads()
+    fetchUsers()  // Fetch users when the component mounts
   }, [])
 
   useEffect(() => {
@@ -114,12 +134,31 @@ export default function NewCallsPage() {
     )
   }
 
-  const handleAssignCalls = () => {
-    toast({
-      title: "Calls Assigned",
-      description: `${selectedCalls.length} calls have been assigned.`,
-    })
-    setSelectedCalls([])
+  const handleAssignCalls = async () => {
+    console.log(selectedUser)
+    const userEmail = selectedUser 
+    if (!userEmail) {
+      toast({ title: "Error", description: "User email not found." })
+      return
+    }
+
+    try {
+      // Update each selected call with the `tele_caller` field
+      for (const callId of selectedCalls) {
+        await directus.request(updateItem("leads", callId, { tele_caller: userEmail }))
+      }
+
+      toast({
+        title: "Calls Assigned",
+        description: `${selectedCalls.length} calls have been assigned to you.`,
+      })
+      setSelectedCalls([])  // Clear the selected calls
+      setIsModalOpen(false)  // Close the modal
+      fetchLeads()
+    } catch (error) {
+      console.error("Error assigning calls:", error)
+      toast({ title: "Error", description: "An error occurred while assigning calls." })
+    }
   }
 
   const clearFilters = () => {
@@ -133,12 +172,6 @@ export default function NewCallsPage() {
     setCustomTag1Filters([])
     setCustomTag2Filters([])
   }
-
-
-  const handleRowClick = (id: string) => {
-    window.location.href = `/staff/calls/${id}`;
-  };
-
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -167,39 +200,15 @@ export default function NewCallsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
-              <FilterDropdown label="Term" collection="terms" tagFilters={termFilters} toggleTagFilter={(tag) =>
-                setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-              <FilterDropdown label="Course" collection="courses" tagFilters={courseFilters} toggleTagFilter={(tag) =>
-                setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-              <FilterDropdown label="Subject" collection="subjects" tagFilters={subjectFilters} toggleTagFilter={(tag) =>
-                setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-              <FilterDropdown label="Faculty" collection="faculties" tagFilters={facultyFilters} toggleTagFilter={(tag) =>
-                setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-              <FilterDropdown label="Custom Tag 1" collection="custom_tags_one" tagFilters={customTag1Filters} toggleTagFilter={(tag) =>
-                setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-              <FilterDropdown label="Custom Tag 2" collection="custom_tags_two" tagFilters={customTag2Filters} toggleTagFilter={(tag) =>
-                setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-              } />
-
-              {(searchQuery ||
-                statusFilter !== "all" ||
-                sourceFilters !== "all" ||
-                termFilters.length > 0 ||
-                courseFilters.length > 0 ||
-                subjectFilters.length > 0 ||
-                facultyFilters.length > 0 ||
-                customTag1Filters.length > 0 ||
-                customTag2Filters.length > 0) && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    <X className="mr-2 h-4 w-4" />
-                    Clear Filters
-                  </Button>
-                )}
+              {/* Filters go here */}
+              {/* FilterDropdown components for filtering */}
+              {/* Clear Filters Button */}
+              {searchQuery && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="mr-2 h-4 w-4" />
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
 
@@ -207,9 +216,17 @@ export default function NewCallsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4"
+                    />
+                  </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead style={{width: '40%'}}>Query</TableHead>
+                  <TableHead>Query</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
@@ -221,11 +238,18 @@ export default function NewCallsPage() {
                   <TableRow
                     key={call.id}
                     className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
-                    onClick={() => handleRowClick(call.id)} // Trigger navigation when row is clicked
                   >
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedCalls.includes(call.id)}
+                        onChange={() => toggleCallSelection(call.id)}
+                        className="h-4 w-4"
+                      />
+                    </TableCell>
                     <TableCell>{call.name}</TableCell>
                     <TableCell>{call.phone}</TableCell>
-                    <TableCell style={{width: '40%'}}>{call.query}</TableCell>
+                    <TableCell>{call.query}</TableCell>
                     <TableCell>{call.source}</TableCell>
                     <TableCell>{call.followup_level}</TableCell>
                     <TableCell>
@@ -242,23 +266,33 @@ export default function NewCallsPage() {
       </Card>
 
       {selectedCalls.length > 0 && (
+        <Button onClick={() => setIsModalOpen(true)} className="mt-4">Assign Selected Calls</Button>
+      )}
+
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-2">Assign Calls</h3>
-            <p>You are about to assign {selectedCalls.length} calls to yourself.</p>
-            <ul className="mt-2 space-y-1">
-              {selectedCalls.map((id) => {
-                const call = filteredCalls.find((c) => c.id === id)
-                return call && (
-                  <li key={id} className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500" />
-                    {call.name} - {call.phone}
-                  </li>
-                )
-              })}
-            </ul>
+            <p>You are about to assign {selectedCalls.length} calls to a user.</p>
+
+            {/* User Selection */}
+            <div className="mt-4">
+              <select
+                value={selectedUser || ""}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="">Select a user</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.email}>
+                    {user.name} - {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-end mt-4 gap-2">
-              <Button variant="outline" onClick={() => setSelectedCalls([])}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button onClick={handleAssignCalls}>Confirm Assignment</Button>
             </div>
           </div>
