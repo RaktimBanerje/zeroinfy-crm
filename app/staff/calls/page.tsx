@@ -140,6 +140,9 @@ export default function NewCallsPage() {
     setCustomTag1Filters([])
     setCustomTag2Filters([])
   }
+  const handleRowClick = (id: string) => {
+    window.location.href = `/staff/calls/${id}`;
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -210,27 +213,31 @@ export default function NewCallsPage() {
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Query</TableHead>
+                  <TableHead style={{width: '45%'}}>Query</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
-                  <TableHead className="hidden">Source</TableHead>
-                  <TableHead className="hidden">Follow-up Level</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {filteredCalls.map((call) => (
-                  <TableRow key={call.id}>
-                    <TableCell>{call.name}</TableCell>
-                    <TableCell>{call.phone}</TableCell>
-                    <TableCell>{call.query}</TableCell>
-                    <TableCell>
-                      {call.tags?.map((tag: string) => (
-                        <Badge key={tag} variant="outline">{tag.trim()}</Badge>
-                      ))}
-                    </TableCell>
-                    <TableCell className="hidden">{call.source}</TableCell>
-                    <TableCell className="hidden">{call.followup_level}</TableCell>
-                  </TableRow>
+                  <TableRow
+                  key={call.id}
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => handleRowClick(call.id)} // Trigger navigation when row is clicked
+                >
+                  <TableCell>{call.name}</TableCell>
+                  <TableCell>{call.phone}</TableCell>
+                  <TableCell style={{width: '45%'}}>{call.query}</TableCell>
+                  <TableCell>{call.source}</TableCell>
+                  <TableCell>{call.followup_level}</TableCell>
+                  <TableCell>
+                    {call.tags?.map((tag: string) => (
+                      <Badge key={tag} variant="outline">{tag.trim()}</Badge>
+                    ))}
+                  </TableCell>
+                </TableRow>
                 ))}
               </TableBody>
             </Table>

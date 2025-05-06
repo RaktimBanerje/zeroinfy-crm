@@ -51,9 +51,9 @@ export const FilterDropdown = ({
     fetchData()
 
     return () => {
-      isMounted = false // Prevent state update if component unmounts
+      isMounted = false
     }
-  }, []) // Will re-fetch only if collection string changes
+  }, [])
 
   const filteredItems = items.filter((item) =>
     item[labelKey]?.toLowerCase().includes(searchTerm.toLowerCase())

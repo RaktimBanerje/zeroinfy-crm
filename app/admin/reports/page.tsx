@@ -28,6 +28,7 @@ import { useToast } from "@/components/ui/use-toast"
 
 export default function ReportsPage() {
   const { toast } = useToast()
+
   const [activeTab, setActiveTab] = useState("overview")
   const [dateRange, setDateRange] = useState("week")
   const [startDate, setStartDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
@@ -53,62 +54,40 @@ export default function ReportsPage() {
   const [trendChartData, setTrendChartData] = useState([])
 
   useEffect(() => {
-    // Load sources and courses
     setSources(getSources())
     setCourses(getTagsByType("course"))
+  }, [])
 
-    // Generate reports
+  useEffect(() => {
     generateReports()
-  }, [dateRange, startDate, endDate, sourceFilter, courseFilter, statusFilter, activeTab])
+  }, [dateRange, startDate, endDate, sourceFilter, courseFilter, statusFilter])
 
   const generateReports = () => {
     const customers = getCustomers()
 
-    // Filter customers based on date range and filters
     const filteredCustomers = customers.filter((customer) => {
       const createdAt = new Date(customer.createdAt)
 
-      // Date filter
+      // Filter by date range
       if (dateRange === "custom") {
-        if (createdAt < startDate || createdAt > endDate) {
-          return false
-        }
+        if (createdAt < startDate || createdAt > endDate) return false
       } else if (dateRange === "week") {
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        if (createdAt < weekAgo) {
-          return false
-        }
+        if (createdAt < new Date(Date.now() - 7 * 86400000)) return false
       } else if (dateRange === "month") {
-        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        if (createdAt < monthAgo) {
-          return false
-        }
+        if (createdAt < new Date(Date.now() - 30 * 86400000)) return false
       } else if (dateRange === "year") {
-        const yearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-        if (createdAt < yearAgo) {
-          return false
-        }
+        if (createdAt < new Date(Date.now() - 365 * 86400000)) return false
       }
 
-      // Source filter
-      if (sourceFilter !== "all" && customer.source !== sourceFilter) {
-        return false
-      }
-
-      // Course filter
-      if (courseFilter !== "all" && customer.tags.course !== courseFilter) {
-        return false
-      }
-
-      // Status filter
-      if (statusFilter !== "all" && customer.status !== statusFilter) {
-        return false
-      }
+      // Filters
+      if (sourceFilter !== "all" && customer.source !== sourceFilter) return false
+      if (courseFilter !== "all" && customer.tags.course !== courseFilter) return false
+      if (statusFilter !== "all" && customer.status !== statusFilter) return false
 
       return true
     })
 
-    // Overview data
+    // KPI
     setOverviewData({
       totalCustomers: filteredCustomers.length,
       newCustomers: filteredCustomers.filter((c) => c.status === "New").length,
@@ -117,86 +96,56 @@ export default function ReportsPage() {
       soldCustomers: filteredCustomers.filter((c) => c.status === "Sold").length,
     })
 
-    // Source chart data
+    // Source chart
     const sourceData = {}
-    filteredCustomers.forEach((customer) => {
-      sourceData[customer.source] = (sourceData[customer.source] || 0) + 1
+    filteredCustomers.forEach((c) => {
+      sourceData[c.source] = (sourceData[c.source] || 0) + 1
     })
-
     setSourceChartData(Object.entries(sourceData).map(([name, value]) => ({ name, value })))
 
-    // Status chart data
+    // Status chart
     setStatusChartData([
-      { name: "New", value: overviewData.newCustomers },
-      { name: "In Progress", value: overviewData.inProgressCustomers },
-      { name: "Closed", value: overviewData.closedCustomers },
-      { name: "Sold", value: overviewData.soldCustomers },
+      { name: "New", value: filteredCustomers.filter((c) => c.status === "New").length },
+      { name: "In Progress", value: filteredCustomers.filter((c) => c.status === "In Progress").length },
+      { name: "Closed", value: filteredCustomers.filter((c) => c.status === "Closed").length },
+      { name: "Sold", value: filteredCustomers.filter((c) => c.status === "Sold").length },
     ])
 
-    // Course chart data
+    // Course chart
     const courseData = {}
-    filteredCustomers.forEach((customer) => {
-      if (customer.tags.course) {
-        courseData[customer.tags.course] = (courseData[customer.tags.course] || 0) + 1
-      }
+    filteredCustomers.forEach((c) => {
+      if (c.tags.course) courseData[c.tags.course] = (courseData[c.tags.course] || 0) + 1
     })
-
     setCourseChartData(Object.entries(courseData).map(([name, value]) => ({ name, value })))
 
-    // Trend chart data
+    // Trend chart
     const trendData = {}
+    filteredCustomers.forEach((c) => {
+      const date = new Date(c.createdAt)
+      let key = ""
 
-    // Group by day, week, or month based on date range
-    filteredCustomers.forEach((customer) => {
-      const date = new Date(customer.createdAt)
-      let key
-
-      if (dateRange === "week" || (dateRange === "custom" && (endDate - startDate) / (24 * 60 * 60 * 1000) <= 14)) {
-        // Group by day
+      if (dateRange === "week" || (dateRange === "custom" && (endDate - startDate) / 86400000 <= 14)) {
         key = date.toLocaleDateString()
-      } else if (
-        dateRange === "month" ||
-        (dateRange === "custom" && (endDate - startDate) / (24 * 60 * 60 * 1000) <= 60)
-      ) {
-        // Group by week
-        const weekNumber = Math.ceil((date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay()) / 7)
-        key = `Week ${weekNumber}, ${date.toLocaleDateString("default", { month: "short" })}`
+      } else if (dateRange === "month" || (dateRange === "custom" && (endDate - startDate) / 86400000 <= 60)) {
+        const week = Math.ceil((date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay()) / 7)
+        key = `Week ${week}, ${date.toLocaleDateString("default", { month: "short" })}`
       } else {
-        // Group by month
         key = date.toLocaleDateString("default", { month: "short", year: "numeric" })
       }
 
       trendData[key] = (trendData[key] || 0) + 1
     })
 
-    // Convert to array and sort by date
-    const trendArray = Object.entries(trendData).map(([date, count]) => ({ date, count }))
-
-    // Sort by date
-    if (dateRange === "week" || (dateRange === "custom" && (endDate - startDate) / (24 * 60 * 60 * 1000) <= 14)) {
-      trendArray.sort((a, b) => new Date(a.date) - new Date(b.date))
-    }
-
-    setTrendChartData(trendArray)
+    setTrendChartData(Object.entries(trendData).map(([date, count]) => ({ date, count })))
   }
 
   const handleExport = () => {
     try {
-      // Create filters object
-      const filters = {}
+      const filters: any = {}
+      if (statusFilter !== "all") filters.status = statusFilter
+      if (courseFilter !== "all") filters.tags = { course: courseFilter }
 
-      if (statusFilter !== "all") {
-        filters.status = statusFilter
-      }
-
-      if (courseFilter !== "all") {
-        filters.tags = { course: courseFilter }
-      }
-
-      // Export to CSV
       const csvContent = exportCustomersToCSV(filters)
-
-      // Create a blob and download
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
@@ -206,20 +155,12 @@ export default function ReportsPage() {
       link.click()
       document.body.removeChild(link)
 
-      toast({
-        title: "Export successful",
-        description: "Report data exported to CSV",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast({ title: "Export successful", description: "Report data exported to CSV" })
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
     }
   }
 
-  // Colors for charts
   const COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#f43f5e", "#6366f1"]
 
   return (
@@ -233,10 +174,7 @@ export default function ReportsPage() {
       </div>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent style={{marginTop: 20}}>
           <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label>Date Range</Label>
@@ -495,4 +433,3 @@ export default function ReportsPage() {
     </div>
   )
 }
-

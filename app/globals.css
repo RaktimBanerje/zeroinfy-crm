@@ -93,3 +93,8 @@ body {
   }
 }
 .aa > .overflow-auto {overflow: unset !important;}
+
+#__next-build-watcher,
+#__nextjs-toast {
+  display: none !important;
+}

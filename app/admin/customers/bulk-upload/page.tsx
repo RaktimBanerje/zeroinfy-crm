@@ -20,12 +20,14 @@ export default function BulkUploadPage() {
   const [step, setStep] = useState("upload")
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState(null)
+  const [failedLeads, setFailedLeads] = useState([])
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
       setUploadStatus(null)
+      setFailedLeads([]) // Clear failed leads
     }
   }
 
@@ -50,6 +52,8 @@ export default function BulkUploadPage() {
       header: true,
       complete: async (result) => {
         const csvData = result.data
+        let importFailed = false
+        let failedLeads = []
 
         for (let row of csvData) {
           const leadData = {
@@ -63,15 +67,40 @@ export default function BulkUploadPage() {
           }
 
           try {
-            await axios.post("https://zeroinfy.thinksurfmedia.in/items/leads", leadData)
+            const response = await axios.post("https://zeroinfy.thinksurfmedia.in/items/leads", leadData)
+
+            if (response.status !== 200) {
+              throw new Error(`Failed to import lead: ${row.Name} (${row.Phone})`)
+            }
           } catch (error) {
+            const errorResponse = error.response?.data
+            if (errorResponse && errorResponse.errors) {
+              // Check if the error is a duplicate entry
+              const duplicateError = errorResponse.errors.find(e => e.extensions?.code === "RECORD_NOT_UNIQUE")
+              if (duplicateError) {
+                // Collect the name and phone of the failed lead
+                failedLeads.push({
+                  name: row.Name,
+                  phone: row.Phone,
+                  error: 'Upload failed due to duplicate entry',
+                })
+                importFailed = true
+              }
+            }
             console.error("Error adding lead:", error)
           }
         }
 
-        setUploadStatus("Upload and import completed.")
+        if (importFailed) {
+          setFailedLeads(failedLeads) // Set failed leads state
+          setUploadStatus(`Upload failed due to duplicate entries for ${failedLeads.length} leads.`)
+          setStep("error")
+        } else {
+          setUploadStatus("Upload and import completed.")
+          setStep("complete")
+        }
+
         setIsUploading(false)
-        setStep("complete")
       },
       error: (err) => {
         toast({
@@ -88,12 +117,13 @@ export default function BulkUploadPage() {
     setFile(null)
     setUploadStatus(null)
     setStep("upload")
+    setFailedLeads([]) // Reset failed leads on reset
   }
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="mb-6">
-        <Link href="/staff/dashboard">
+        <Link href="/admin/dashboard">
           <Button variant="outline" className="mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Customers
@@ -137,6 +167,25 @@ export default function BulkUploadPage() {
               </div>
               <h3 className="text-xl font-semibold">Import Complete</h3>
               <p className="text-muted-foreground">Your CSV data has been successfully imported.</p>
+            </div>
+          )}
+
+          {step === "error" && (
+            <div className="flex flex-col items-center justify-center space-y-4 p-10 text-center">
+              <div className="rounded-full bg-red-100 dark:bg-red-900/30 p-3">
+                <ArrowLeft className="h-8 w-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-semibold">Import Failed</h3>
+              <p className="text-muted-foreground">
+                The following leads failed to import due to duplicate entries:
+              </p>
+              <ul className="list-inside text-sm text-red-600" style={{textAlign: 'left'}}>
+                {failedLeads.map((lead, index) => (
+                  <li key={index} style={{marginBottom: 10}}>
+                    {lead.name} ({lead.phone}): {lead.error}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </CardContent>

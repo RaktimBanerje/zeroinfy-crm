@@ -57,7 +57,6 @@ export default function AdminDashboard() {
     }
   };
 
-
   const processLeads = useCallback(() => {
     // Basic KPI counts
     const total = leads.length
@@ -67,13 +66,18 @@ export default function AdminDashboard() {
 
     setKpiData({ total, assigned, pending, completed })
 
-    // Pie Chart
-    const statusCounts = leads.reduce((acc, lead) => {
-      acc[lead.status] = (acc[lead.status] || 0) + 1
-      return acc
-    }, {})
+    // Pie Chart Data: Calculating counts of each status
+    const statusCounts = {
+      "New": leads.filter(l => l.status === "New").length,
+      "In Progress": leads.filter(l => l.status === "In Progress").length,
+      "Closed": leads.filter(l => l.status === "Closed").length,
+      "Sold": leads.filter(l => l.status === "Sold").length,
+    }
 
-    const chartData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
+    const chartData = Object.entries(statusCounts).map(([name, value]) => ({
+      name,
+      value
+    }))
     setStatusChartData(chartData)
 
     // Filtered Leads (table)
@@ -152,7 +156,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Pie Chart */}
-      <Card className="hidden">
+      <Card>
         <CardHeader><CardTitle>Call Status Distribution</CardTitle></CardHeader>
         <CardContent>
           <div className="h-[300px]">

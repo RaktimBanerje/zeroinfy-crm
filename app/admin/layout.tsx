@@ -69,7 +69,7 @@ export default function AdminLayout({
     { name: "Customers", href: "/admin/customers", icon: Users },
     // { name: "Calls", href: "/admin/calls", icon: Phone },
     // { name: "Tasks", href: "/admin/tasks", icon: FileText },
-    { name: "Reports", href: "/admin/reports", icon: BarChart },
+    // { name: "Reports", href: "/admin/reports", icon: BarChart },
     {
       name: "Management",
       href: "#",
@@ -103,12 +103,12 @@ export default function AdminLayout({
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="relative" size="icon">
+          {/* <Button variant="outline" className="relative" size="icon">
             <Bell className="h-5 w-5" />
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs text-white">
               3
             </span>
-          </Button>
+          </Button> */}
 
           {/* Profile Dropdown */}
           <DropdownMenu>

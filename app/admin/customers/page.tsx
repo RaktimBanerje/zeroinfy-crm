@@ -130,6 +130,10 @@ export default function NewCallsPage() {
     setCustomTag2Filters([]);
   };
 
+  const handleRowClick = (id: string) => {
+    window.location.href = `/staff/calls/${id}`;
+  };
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <Card>
@@ -218,9 +222,19 @@ export default function NewCallsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4"
+                    />
+                  </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Query</TableHead>
+                  <TableHead style={{width: '40%'}}>Query</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
                 </TableRow>
               </TableHeader>
@@ -231,11 +245,24 @@ export default function NewCallsPage() {
                   </TableRow>
                 ) : (
                   filteredCalls.map((call) => (
-                    <TableRow key={call.id}>
-                      <TableCell>{call.name}</TableCell>
-                      <TableCell>{call.phone}</TableCell>
-                      <TableCell>{call.query}</TableCell>
+                    <TableRow
+                      key={call.id}
+                      className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
                       <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedCalls.includes(call.id)}
+                          onChange={() => toggleCallSelection(call.id)}
+                          className="h-4 w-4"
+                        />
+                      </TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}>{call.name}</TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}>{call.phone}</TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}style={{width: '40%'}}>{call.query}</TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}>{call.source}</TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}>{call.followup_level}</TableCell>
+                      <TableCell onClick={() => handleRowClick(call.id)}>
                         {call.tags?.map((tag) => (
                           <Badge key={tag} variant="outline">{tag}</Badge>
                         ))}

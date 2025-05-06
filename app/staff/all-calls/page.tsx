@@ -130,6 +130,10 @@ export default function NewCallsPage() {
     setCustomTag2Filters([]);
   };
 
+  const handleRowClick = (id) => {
+    window.location.href = `/staff/calls/${id}`;
+  };
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <Card>
@@ -228,7 +232,9 @@ export default function NewCallsPage() {
                   </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Query</TableHead>
+                  <TableHead style={{width: '45%'}}>Query</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
                 </TableRow>
               </TableHeader>
@@ -239,7 +245,11 @@ export default function NewCallsPage() {
                   </TableRow>
                 ) : (
                   filteredCalls.map((call) => (
-                    <TableRow key={call.id}>
+                    <TableRow
+                      key={call.id}
+                      className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                      onClick={() => handleRowClick(call.id)}
+                    >
                       <TableCell>
                         <input
                           type="checkbox"
@@ -250,7 +260,9 @@ export default function NewCallsPage() {
                       </TableCell>
                       <TableCell>{call.name}</TableCell>
                       <TableCell>{call.phone}</TableCell>
-                      <TableCell>{call.query}</TableCell>
+                      <TableCell style={{width: '45%'}}>{call.query}</TableCell>
+                      <TableCell>{call.source}</TableCell>
+                      <TableCell >{call.followup_level}</TableCell>
                       <TableCell>
                         {call.tags?.map((tag) => (
                           <Badge key={tag} variant="outline">{tag}</Badge>

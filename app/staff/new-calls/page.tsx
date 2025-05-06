@@ -151,12 +151,29 @@ export default function NewCallsPage() {
     setCustomTag2Filters([])
   }
 
+  const handleRowClick = (id) => {
+    window.location.href = `/staff/calls/${id}`;
+  };
+
+
   return (
     <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">New Calls</h1>
+          <div className="flex items-center gap-2">
+            {/* "Assign Me" Button */}
+            {selectedCalls.length > 0 && (
+              <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+                Assign Me
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+
       <Card>
-        <CardHeader>
-          <CardTitle>New Calls</CardTitle>
-        </CardHeader>
         <CardContent>
           <div className="flex overflow-x-auto pb-2">
             <SourceTabs activeSourceTab={sourceFilters} setActiveSourceTab={setSourceFilters} />
@@ -235,7 +252,10 @@ export default function NewCallsPage() {
                   </TableRow>
                 ) : (
                   filteredCalls.map((call) => (
-                    <TableRow key={call.id}>
+                    <TableRow
+                      key={call.id}
+                      className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
                       <TableCell>
                         <input
                           type="checkbox"
@@ -261,13 +281,6 @@ export default function NewCallsPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* "Assign Me" Button */}
-      {selectedCalls.length > 0 && (
-        <Button onClick={() => setIsModalOpen(true)} className="mt-4">
-          Assign Me
-        </Button>
-      )}
 
       {/* Confirmation Modal */}
       {isModalOpen && selectedCalls.length > 0 && (

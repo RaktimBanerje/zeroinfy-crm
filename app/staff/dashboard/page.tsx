@@ -33,6 +33,23 @@ export default function NewCallsPage() {
   const [filteredCalls, setFilteredCalls] = useState<any[]>([])
   const [selectedCalls, setSelectedCalls] = useState<string[]>([])
 
+  const [newCount, setNewCount] = useState(0)
+  const [inProgressCount, setInProgressCount] = useState(0)
+  const [closeCount, setCloseCount] = useState(0)
+  const [soldCount, setSoldCount] = useState(0)
+
+  useEffect(() => {
+    const newCalls = allCalls.filter((call) => call.status === "New").length
+    const inProgressCalls = allCalls.filter((call) => call.status === "In Progress").length
+    const closeCalls = allCalls.filter((call) => call.status === "Close").length
+    const soldCalls = allCalls.filter((call) => call.status === "Sold").length
+  
+    setNewCount(newCalls)
+    setInProgressCount(inProgressCalls)
+    setCloseCount(closeCalls)
+    setSoldCount(soldCalls)
+  }, [allCalls])
+
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems("leads"))
@@ -141,6 +158,11 @@ export default function NewCallsPage() {
     setCustomTag2Filters([])
   }
 
+  const handleRowClick = (id) => {
+    window.location.href = `/staff/calls/${id}`;
+  };
+
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -162,29 +184,37 @@ export default function NewCallsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <Card className="bg-blue-50 dark:bg-blue-950/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Calls</CardTitle>
+            <CardTitle className="text-sm font-medium">New Calls</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">42</div>
+            <div className="text-3xl font-bold">{newCount}</div>
           </CardContent>
         </Card>
-        <Card className="bg-amber-50 dark:bg-amber-950/30">
+        <Card className="bg-yellow-50 dark:bg-yellow-950/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending Calls</CardTitle>
+            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">18</div>
+            <div className="text-3xl font-bold">{inProgressCount}</div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-50 dark:bg-gray-950/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Close</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{closeCount}</div>
           </CardContent>
         </Card>
         <Card className="bg-green-50 dark:bg-green-950/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completed Calls</CardTitle>
+            <CardTitle className="text-sm font-medium">Sold</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">76</div>
+            <div className="text-3xl font-bold">{soldCount}</div>
           </CardContent>
         </Card>
       </div>
@@ -256,26 +286,30 @@ export default function NewCallsPage() {
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Query</TableHead>
+                  <TableHead style={{width: '45%'}}>Query</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
-                  <TableHead className="hidden">Source</TableHead>
-                  <TableHead className="hidden">Follow-up Level</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {filteredCalls.map((call) => (
-                  <TableRow key={call.id}>
+                  <TableRow
+                    key={call.id}
+                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => handleRowClick(call.id)}
+                  >
                     <TableCell>{call.name}</TableCell>
                     <TableCell>{call.phone}</TableCell>
-                    <TableCell>{call.query}</TableCell>
+                    <TableCell style={{width: '45%'}}>{call.query}</TableCell>
+                    <TableCell>{call.source}</TableCell>
+                    <TableCell >{call.followup_level}</TableCell>
                     <TableCell>
                       {call.tags?.map((tag: string) => (
                         <Badge key={tag} variant="outline">{tag.trim()}</Badge>
                       ))}
                     </TableCell>
-                    <TableCell className="hidden">{call.source}</TableCell>
-                    <TableCell className="hidden">{call.followup_level}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
