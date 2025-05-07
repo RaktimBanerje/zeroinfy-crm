@@ -39,12 +39,34 @@ export default function NewCallsPage() {
 
   const fetchLeads = async () => {
     try {
-      const data = await directus.request(readItems("leads"))
-      setAllCalls(data)
+      const data = await directus.request(readItems("leads"));
+  
+      const userEmail = localStorage.getItem("userEmail");
+  
+      // Get today's date in IST
+      const todayIST = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Kolkata",
+      });
+      const todayDateIST = new Date(todayIST).toISOString().split("T")[0]; // 'YYYY-MM-DD'
+
+      console.log(todayDateIST)
+  
+      // Filter leads assigned to the user and either:
+      // - next_followup_date is today
+      // - OR next_followup_date is empty/null/undefined
+      const filteredLeads = data.filter((lead: any) => {
+        const leadDate = lead.next_followup_date?.split("T")[0];
+        return (
+          (leadDate === todayDateIST || !lead.next_followup_date)
+        );
+      });
+  
+      setAllCalls(filteredLeads);
     } catch (error) {
-      console.error("Error fetching leads from Directus:", error)
+      console.error("Error fetching leads from Directus:", error);
     }
-  }
+  };
+
 
   const fetchUsers = async () => {
     try {
@@ -189,6 +211,7 @@ export default function NewCallsPage() {
           </div>
 
           <div className="mb-4 flex items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
+            {/* Left side: Search input */}
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
@@ -199,10 +222,13 @@ export default function NewCallsPage() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-2 items-center">
-              {/* Filters go here */}
-              {/* FilterDropdown components for filtering */}
-              {/* Clear Filters Button */}
+            {/* Right side: Button & Clear Filters */}
+            <div className="flex items-center gap-2">
+              {selectedCalls.length > 0 && (
+                <Button onClick={() => setIsModalOpen(true)}>
+                  Assign Selected Calls
+                </Button>
+              )}
               {searchQuery && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="mr-2 h-4 w-4" />
@@ -213,28 +239,32 @@ export default function NewCallsPage() {
           </div>
 
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">
-                    <input
-                      type="checkbox"
-                      checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4"
-                    />
-                  </TableHead>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead>Query</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Follow-up Level</TableHead>
-                  <TableHead>Tags</TableHead>
-                </TableRow>
-              </TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">
+                  <input
+                    type="checkbox"
+                    checked={selectedCalls.length === filteredCalls.length && filteredCalls.length > 0}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4"
+                  />
+                </TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Phone Number</TableHead>
+                <TableHead>Query</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead>Follow-up Level</TableHead>
+                <TableHead>Tele Caller</TableHead>
+                <TableHead>Tags</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <TableBody>
-                {filteredCalls.map((call) => (
+            <TableBody>
+              {filteredCalls.map((call) => {
+                const teleCaller = users.find((user) => user.email === call.tele_caller);
+
+                return (
                   <TableRow
                     key={call.id}
                     className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -253,21 +283,23 @@ export default function NewCallsPage() {
                     <TableCell>{call.source}</TableCell>
                     <TableCell>{call.followup_level}</TableCell>
                     <TableCell>
+                      <Badge className="bg-blue-500 text-white" variant="outline">
+                        {teleCaller?.first_name || "N/A"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       {call.tags?.map((tag: string) => (
                         <Badge key={tag} variant="outline">{tag.trim()}</Badge>
                       ))}
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
         </CardContent>
       </Card>
-
-      {selectedCalls.length > 0 && (
-        <Button onClick={() => setIsModalOpen(true)} className="mt-4">Assign Selected Calls</Button>
-      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -283,10 +315,12 @@ export default function NewCallsPage() {
                 className="w-full p-2 border rounded-md"
               >
                 <option value="">Select a user</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.email}>
-                    {user.name} - {user.email}
-                  </option>
+                {users
+                  .filter((user) => user.email !== "admin@example.com")
+                  .map((user) => (
+                    <option key={user.id} value={user.email}>
+                      {user.first_name}
+                    </option>
                 ))}
               </select>
             </div>

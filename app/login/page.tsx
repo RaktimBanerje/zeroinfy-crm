@@ -76,7 +76,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold">Zeroinfy CRM</CardTitle>
+          <img
+            src="https://zeroinfy.in/cdn/shop/files/ZEROINFY_NEW_WEBSITE_LOGO_200x.png?v=1683973607"
+            alt="Zeroinfy Logo"
+            className="mx-auto h-12 w-auto"
+          />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

@@ -131,7 +131,7 @@ export default function NewCallsPage() {
   };
 
   const handleRowClick = (id: string) => {
-    window.location.href = `/staff/calls/${id}`;
+    window.location.href = `/admin/customers/${id}`;
   };
 
   return (

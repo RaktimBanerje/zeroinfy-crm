@@ -91,30 +91,16 @@ export default function StaffLayout({ children }) {
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-10 border-b bg-background">
         <div className="flex h-16 items-center px-4 md:px-6">
-          <a className="flex items-center gap-2" href="/staff/dashboard">
-            <div className="rounded-full bg-gradient-to-r from-pink-500 to-violet-500 p-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                className="lucide lucide-phone h-5 w-5 text-white"
-              >
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
-              Zeroinfy CRM
-            </h1>
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ml-2 bg-gradient-to-r from-pink-500 to-violet-500">
-              Staff
-            </div>
-          </a>
+        <a className="flex items-center gap-2" href="/staff/dashboard">
+          <img
+            src="https://zeroinfy.in/cdn/shop/files/ZEROINFY_NEW_WEBSITE_LOGO_200x.png?v=1683973607"
+            alt="Zeroinfy CRM"
+            className="h-10"
+          />
+          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 ml-2 bg-gradient-to-r from-pink-500 to-violet-500">
+            Staff
+          </div>
+        </a>
           <nav className="ml-auto flex items-center gap-4 md:gap-6">
             <Link
               href="/staff/dashboard"
@@ -157,7 +143,7 @@ export default function StaffLayout({ children }) {
                   style={{ right: 12, top: 8 }}
                   className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs text-black animate-pulse"
                 >
-                  {newLeadsCount == '' ? '' : newLeadsCount}
+                  {newLeadsCount == '' ? 0 : newLeadsCount}
                 </span>
               </Link>
             </Button>

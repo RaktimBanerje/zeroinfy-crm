@@ -35,19 +35,35 @@ export default function NewCallsPage() {
 
   const fetchLeads = async () => {
     try {
-      const data = await directus.request(readItems("leads"))
+      const data = await directus.request(readItems("leads"));
   
-      // Get the current user's email from localStorage
-      const userEmail = localStorage.getItem('userEmail')
+      const userEmail = localStorage.getItem("userEmail");
   
-      // Filter the leads where `tele_caller` is equal to the user's email
-      const filteredLeads = data.filter((lead: any) => lead.tele_caller === userEmail)
+      // Get today's date in IST
+      const todayIST = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Kolkata",
+      });
+      const todayDateIST = new Date(todayIST).toISOString().split("T")[0]; // 'YYYY-MM-DD'
+
+      console.log(todayDateIST)
   
-      setAllCalls(filteredLeads)
+      // Filter leads assigned to the user and either:
+      // - next_followup_date is today
+      // - OR next_followup_date is empty/null/undefined
+      const filteredLeads = data.filter((lead: any) => {
+        const leadDate = lead.next_followup_date?.split("T")[0];
+        return (
+          lead.tele_caller === userEmail &&
+          (leadDate === todayDateIST || !lead.next_followup_date)
+        );
+      });
+  
+      setAllCalls(filteredLeads);
     } catch (error) {
-      console.error("Error fetching leads from Directus:", error)
+      console.error("Error fetching leads from Directus:", error);
     }
-  }
+  };
+
   
   useEffect(() => {
     fetchLeads()

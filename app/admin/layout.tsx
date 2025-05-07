@@ -93,12 +93,12 @@ export default function AdminLayout({
             <span className="sr-only">Toggle menu</span>
           </Button>
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="rounded-full bg-gradient-to-r from-pink-500 to-violet-500 p-1">
-              <Phone className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
-              Zeroinfy CRM
-            </h1>
+            <img
+              src="https://zeroinfy.in/cdn/shop/files/ZEROINFY_NEW_WEBSITE_LOGO_200x.png?v=1683973607"
+              alt="Zeroinfy CRM Logo"
+              className="h-10" // Adjust height as needed
+            />
+
             <Badge className="ml-2 bg-gradient-to-r from-pink-500 to-violet-500">Admin</Badge>
           </Link>
         </div>

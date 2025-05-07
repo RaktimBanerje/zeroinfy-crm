@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Filter, Search, Check, X } from "lucide-react";
+import { Filter, Search, Check, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { FilterDropdown } from "@/app/components/FilterDropdown";
-import SourceTabs from "../../components/SourceTabs";
 import directus from '../../../lib/directus';
 import { readItems } from "@directus/sdk";
 
@@ -19,7 +18,7 @@ export default function NewCallsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilters, setSourceFilters] = useState([]);
 
-  // 🧠 Individual tag filters per dropdown
+  // Tag Filters
   const [termFilters, setTermFilters] = useState([]);
   const [courseFilters, setCourseFilters] = useState([]);
   const [subjectFilters, setSubjectFilters] = useState([]);
@@ -27,17 +26,21 @@ export default function NewCallsPage() {
   const [customTag1Filters, setCustomTag1Filters] = useState([]);
   const [customTag2Filters, setCustomTag2Filters] = useState([]);
 
+  // Date Range Filters
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const [allCalls, setAllCalls] = useState([]);
   const [filteredCalls, setFilteredCalls] = useState([]);
   const [selectedCalls, setSelectedCalls] = useState([]);
 
-  // Fetch leads from Directus
+  // Fetch from Directus
   const fetchLeads = async () => {
     try {
       const data = await directus.request(readItems('leads'));
       setAllCalls(data);
     } catch (error) {
-      console.error("Error fetching leads from Directus:", error);
+      console.error("Error fetching leads:", error);
     }
   };
 
@@ -45,10 +48,11 @@ export default function NewCallsPage() {
     fetchLeads();
   }, []);
 
-  // Filter calls based on all filters
+  // Filtering Logic
   useEffect(() => {
     let filtered = [...allCalls];
 
+    // Search Filter
     if (searchQuery) {
       filtered = filtered.filter(
         (call) =>
@@ -66,7 +70,7 @@ export default function NewCallsPage() {
       filtered = filtered.filter((call) => sourceFilters.includes(call.source));
     }
 
-    // Tag filtering
+    // Tag filters
     const tagFilterGroups = [
       termFilters,
       courseFilters,
@@ -84,6 +88,16 @@ export default function NewCallsPage() {
       );
     }
 
+    // Date Range Filter
+    if (startDate || endDate) {
+      filtered = filtered.filter((call) => {
+        const callDate = call.next_followup_date ? new Date(call.next_followup_date) : null;
+        const afterStart = startDate ? callDate && callDate >= new Date(startDate) : true;
+        const beforeEnd = endDate ? callDate && callDate <= new Date(endDate) : true;
+        return afterStart && beforeEnd;
+      });
+    }
+
     setFilteredCalls(filtered);
   }, [
     searchQuery,
@@ -95,6 +109,8 @@ export default function NewCallsPage() {
     facultyFilters,
     customTag1Filters,
     customTag2Filters,
+    startDate,
+    endDate,
     allCalls,
   ]);
 
@@ -128,6 +144,8 @@ export default function NewCallsPage() {
     setFacultyFilters([]);
     setCustomTag1Filters([]);
     setCustomTag2Filters([]);
+    setStartDate("");
+    setEndDate("");
   };
 
   const handleRowClick = (id) => {
@@ -141,7 +159,7 @@ export default function NewCallsPage() {
           <CardTitle>All Calls</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
@@ -151,55 +169,17 @@ export default function NewCallsPage() {
                 className="w-full md:w-[300px]"
               />
             </div>
+
             <div className="flex flex-wrap gap-2 items-center">
-              <FilterDropdown
-                label="Term"
-                collection="terms"
-                tagFilters={termFilters}
-                toggleTagFilter={(tag) =>
-                  setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
-              <FilterDropdown
-                label="Course"
-                collection="courses"
-                tagFilters={courseFilters}
-                toggleTagFilter={(tag) =>
-                  setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
-              <FilterDropdown
-                label="Subject"
-                collection="subjects"
-                tagFilters={subjectFilters}
-                toggleTagFilter={(tag) =>
-                  setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
-              <FilterDropdown
-                label="Faculty"
-                collection="faculties"
-                tagFilters={facultyFilters}
-                toggleTagFilter={(tag) =>
-                  setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
-              <FilterDropdown
-                label="Custom Tag 1"
-                collection="custom_tags_one"
-                tagFilters={customTag1Filters}
-                toggleTagFilter={(tag) =>
-                  setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
-              <FilterDropdown
-                label="Custom Tag 2"
-                collection="custom_tags_two"
-                tagFilters={customTag2Filters}
-                toggleTagFilter={(tag) =>
-                  setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-                }
-              />
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{width: "16%"}} />
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="hidden" />
+              {/* Tag Filter Dropdowns */}
+              <FilterDropdown label="Term" collection="terms" tagFilters={termFilters} toggleTagFilter={(tag) => setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
+              <FilterDropdown label="Course" collection="courses" tagFilters={courseFilters} toggleTagFilter={(tag) => setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
+              <FilterDropdown label="Subject" collection="subjects" tagFilters={subjectFilters} toggleTagFilter={(tag) => setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
+              <FilterDropdown label="Faculty" collection="faculties" tagFilters={facultyFilters} toggleTagFilter={(tag) => setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
+              <FilterDropdown label="Custom Tag 1" collection="custom_tags_one" tagFilters={customTag1Filters} toggleTagFilter={(tag) => setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
+              <FilterDropdown label="Custom Tag 2" collection="custom_tags_two" tagFilters={customTag2Filters} toggleTagFilter={(tag) => setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
 
               {(searchQuery ||
                 statusFilter !== "all" ||
@@ -209,7 +189,9 @@ export default function NewCallsPage() {
                 subjectFilters.length > 0 ||
                 facultyFilters.length > 0 ||
                 customTag1Filters.length > 0 ||
-                customTag2Filters.length > 0) && (
+                customTag2Filters.length > 0 ||
+                startDate ||
+                endDate) && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="mr-2 h-4 w-4" />
                   Clear Filters
@@ -232,16 +214,17 @@ export default function NewCallsPage() {
                   </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead style={{width: '45%'}}>Query</TableHead>
+                  <TableHead style={{ width: '45%' }}>Query</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Follow-up Level</TableHead>
                   <TableHead>Tags</TableHead>
+                  <TableHead>Next Follow-up Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCalls.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">No calls found.</TableCell>
+                    <TableCell colSpan={8} className="text-center">No calls found.</TableCell>
                   </TableRow>
                 ) : (
                   filteredCalls.map((call) => (
@@ -260,14 +243,15 @@ export default function NewCallsPage() {
                       </TableCell>
                       <TableCell>{call.name}</TableCell>
                       <TableCell>{call.phone}</TableCell>
-                      <TableCell style={{width: '45%'}}>{call.query}</TableCell>
+                      <TableCell style={{ width: '45%' }}>{call.query}</TableCell>
                       <TableCell>{call.source}</TableCell>
-                      <TableCell >{call.followup_level}</TableCell>
+                      <TableCell>{call.followup_level}</TableCell>
                       <TableCell>
                         {call.tags?.map((tag) => (
                           <Badge key={tag} variant="outline">{tag}</Badge>
                         ))}
                       </TableCell>
+                      <TableCell>{call.next_followup_date || '—'}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -277,7 +261,7 @@ export default function NewCallsPage() {
         </CardContent>
       </Card>
 
-      {/* Assign Calls Confirmation */}
+      {/* Call Assignment Modal */}
       {selectedCalls.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-md w-full">

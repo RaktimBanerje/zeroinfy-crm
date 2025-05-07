@@ -56,15 +56,23 @@ export default function BulkUploadPage() {
         let failedLeads = []
 
         for (let row of csvData) {
+          const fallbackFollowup = row.Followup && row.Followup.trim() !== "" ? row.Followup.trim() : "Fresh Call";
+          
           const leadData = {
             name: row.Name,
             email: row.Email,
             phone: row.Phone,
             query: row.Query,
-            tags: typeof row.Tags === "string"
-              ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
-              : [],
-          }
+            source: row.Source,
+            followup_level: fallbackFollowup,
+            tags: [
+              ...(row.Source ? [row.Source.trim()] : []),
+              fallbackFollowup,
+              ...(typeof row.Tags === "string"
+                ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
+                : [])
+            ]
+          };
 
           try {
             const response = await axios.post("https://zeroinfy.thinksurfmedia.in/items/leads", leadData)
