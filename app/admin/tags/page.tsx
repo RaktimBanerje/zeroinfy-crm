@@ -29,6 +29,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus } from "lucide-react"
 
 export default function TagManagement() {
   const { toast } = useToast()
@@ -199,29 +201,43 @@ export default function TagManagement() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Tag Management</h1>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <CardTitle>Tag Management</CardTitle>
+            <Button
+              onClick={handleCreateNewTag}
+              variant="outline"
+              size="sm"
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />New Tag
+            </Button>
+          </div>
+        </CardHeader>
 
-      <Button onClick={handleCreateNewTag} variant="outline" size="sm" className="mb-4">
-        Add New Tag
-      </Button>
+        <CardContent>
+          <Tabs defaultValue="courses" onValueChange={setActiveTab} value={activeTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="courses">Courses</TabsTrigger>
+              <TabsTrigger value="subjects">Subjects</TabsTrigger>
+              <TabsTrigger value="terms">Terms</TabsTrigger>
+              <TabsTrigger value="faculties">Faculties</TabsTrigger>
+              <TabsTrigger value="custom_tags_one">Custom Tags One</TabsTrigger>
+              <TabsTrigger value="custom_tags_two">Custom Tags Two</TabsTrigger>
+            </TabsList>
 
-      <Tabs defaultValue="courses" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="terms">Terms</TabsTrigger>
-          <TabsTrigger value="faculties">Faculties</TabsTrigger>
-          <TabsTrigger value="custom_tags_one">Custom Tags One</TabsTrigger>
-          <TabsTrigger value="custom_tags_two">Custom Tags Two</TabsTrigger>
-        </TabsList>
+            <TabsContent value="courses">{renderTable(courses, "courses")}</TabsContent>
+            <TabsContent value="subjects">{renderTable(subjects, "subjects")}</TabsContent>
+            <TabsContent value="terms">{renderTable(terms, "terms")}</TabsContent>
+            <TabsContent value="faculties">{renderTable(faculties, "faculties")}</TabsContent>
+            <TabsContent value="custom_tags_one">{renderTable(customTagsOne, "custom_tags_one")}</TabsContent>
+            <TabsContent value="custom_tags_two">{renderTable(customTagsTwo, "custom_tags_two")}</TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="courses">{renderTable(courses, "courses")}</TabsContent>
-        <TabsContent value="subjects">{renderTable(subjects, "subjects")}</TabsContent>
-        <TabsContent value="terms">{renderTable(terms, "terms")}</TabsContent>
-        <TabsContent value="faculties">{renderTable(faculties, "faculties")}</TabsContent>
-        <TabsContent value="custom_tags_one">{renderTable(customTagsOne, "custom_tags_one")}</TabsContent>
-        <TabsContent value="custom_tags_two">{renderTable(customTagsTwo, "custom_tags_two")}</TabsContent>
-      </Tabs>
+      
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>

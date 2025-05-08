@@ -17,6 +17,7 @@ export default function NewCallsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilters, setSourceFilters] = useState([]);
+  const [followupLevelFilters, setFollowupLevelFilters] = useState([]);
 
   // Tag Filters
   const [termFilters, setTermFilters] = useState([]);
@@ -52,7 +53,6 @@ export default function NewCallsPage() {
   useEffect(() => {
     let filtered = [...allCalls];
 
-    // Search Filter
     if (searchQuery) {
       filtered = filtered.filter(
         (call) =>
@@ -68,6 +68,10 @@ export default function NewCallsPage() {
 
     if (sourceFilters.length > 0) {
       filtered = filtered.filter((call) => sourceFilters.includes(call.source));
+    }
+
+    if (followupLevelFilters.length > 0) {
+      filtered = filtered.filter((call) => followupLevelFilters.includes(call.followup_level));
     }
 
     // Tag filters
@@ -88,7 +92,6 @@ export default function NewCallsPage() {
       );
     }
 
-    // Date Range Filter
     if (startDate || endDate) {
       filtered = filtered.filter((call) => {
         const callDate = call.next_followup_date ? new Date(call.next_followup_date) : null;
@@ -103,6 +106,7 @@ export default function NewCallsPage() {
     searchQuery,
     statusFilter,
     sourceFilters,
+    followupLevelFilters,
     termFilters,
     courseFilters,
     subjectFilters,
@@ -138,6 +142,7 @@ export default function NewCallsPage() {
     setSearchQuery("");
     setStatusFilter("all");
     setSourceFilters([]);
+    setFollowupLevelFilters([]);
     setTermFilters([]);
     setCourseFilters([]);
     setSubjectFilters([]);
@@ -156,7 +161,34 @@ export default function NewCallsPage() {
     <div className="flex-1 space-y-6 p-6">
       <Card>
         <CardHeader>
-          <CardTitle>All Calls</CardTitle>
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <CardTitle>All Calls</CardTitle>
+            <div className="flex gap-2">
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{width: "50%"}} />
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="hidden" />
+
+              <FilterDropdown
+                label="Source"
+                collection="sources"
+                tagFilters={sourceFilters}
+                toggleTagFilter={(tag) =>
+                  setSourceFilters((prev) =>
+                    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                  )
+                }
+              />
+              <FilterDropdown
+                label="Follow-up Level"
+                collection="followup_levels"
+                tagFilters={followupLevelFilters}
+                toggleTagFilter={(tag) =>
+                  setFollowupLevelFilters((prev) =>
+                    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                  )
+                }
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">
@@ -171,9 +203,6 @@ export default function NewCallsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{width: "16%"}} />
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="hidden" />
-              {/* Tag Filter Dropdowns */}
               <FilterDropdown label="Term" collection="terms" tagFilters={termFilters} toggleTagFilter={(tag) => setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
               <FilterDropdown label="Course" collection="courses" tagFilters={courseFilters} toggleTagFilter={(tag) => setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
               <FilterDropdown label="Subject" collection="subjects" tagFilters={subjectFilters} toggleTagFilter={(tag) => setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])} />
@@ -184,6 +213,7 @@ export default function NewCallsPage() {
               {(searchQuery ||
                 statusFilter !== "all" ||
                 sourceFilters.length > 0 ||
+                followupLevelFilters.length > 0 ||
                 termFilters.length > 0 ||
                 courseFilters.length > 0 ||
                 subjectFilters.length > 0 ||
@@ -261,7 +291,6 @@ export default function NewCallsPage() {
         </CardContent>
       </Card>
 
-      {/* Call Assignment Modal */}
       {selectedCalls.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-md w-full">

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { DialogDescription } from "@radix-ui/react-dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function FollowupLevelManagement() {
   const { toast } = useToast()
@@ -74,33 +75,40 @@ export default function FollowupLevelManagement() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Followup Level Management</h1>
 
-      <Button onClick={handleCreateNewLevel} variant="outline" size="sm" className="mb-4">
+      {/* <Button onClick={handleCreateNewLevel} variant="outline" size="sm" className="mb-4">
         Add New Followup Level
-      </Button>
+      </Button> */}
 
       {/* Followup Levels Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {followupLevels.map((level) => (
-            <TableRow key={level.id}>
-              <TableCell>{level.name}</TableCell>
-              <TableCell>
-                <Button onClick={() => handleEditLevel(level)} size="sm">
-                  Edit
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <Card>
+        <CardHeader>
+          <CardTitle>Followup Levels</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                {/* <TableHead>Actions</TableHead> */}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {followupLevels.map((level) => (
+                <TableRow key={level.id}>
+                  <TableCell>{level.name}</TableCell>
+                  {/* <TableCell>
+                    <Button onClick={() => handleEditLevel(level)} size="sm">
+                      Edit
+                    </Button>
+                  </TableCell> */}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+      </CardContent>
+      </Card>
 
       {/* Dialog (Modal replacement) */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>

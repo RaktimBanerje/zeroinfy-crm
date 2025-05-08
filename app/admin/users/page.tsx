@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { DialogDescription } from "@radix-ui/react-dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus } from "lucide-react"
 
 export default function UserManagement() {
   const { toast } = useToast()
@@ -91,36 +93,47 @@ export default function UserManagement() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-3xl font-bold">User Management</h1>
-
-      <Button onClick={handleCreateNewUser} variant="outline" size="sm" className="mb-4">
-        Add New User
-      </Button>
-
       {/* Users Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.first_name} {user.last_name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Button onClick={() => handleEditUser(user)} size="sm">
-                  Edit
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <CardTitle>User Management</CardTitle>
+            <Button
+              onClick={handleCreateNewUser}
+              variant="outline"
+              size="sm"
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />New User
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.first_name} {user.last_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleEditUser(user)} size="sm">
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
       {/* Dialog (Modal replacement) */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>

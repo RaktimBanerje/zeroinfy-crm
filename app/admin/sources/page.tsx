@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { DialogDescription } from "@radix-ui/react-dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function SourceManagement() {
   const { toast } = useToast()
@@ -74,33 +75,41 @@ export default function SourceManagement() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Source Management</h1>
 
-      <Button onClick={handleCreateNewTag} variant="outline" size="sm" className="mb-4">
+      {/* <Button onClick={handleCreateNewTag} variant="outline" size="sm" className="mb-4">
         Add New Source
-      </Button>
+      </Button> */}
 
       {/* Source Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sources.map((tag) => (
-            <TableRow key={tag.id}>
-              <TableCell>{tag.name}</TableCell>
-              <TableCell>
-                <Button onClick={() => handleEditTag(tag)} size="sm">
-                  Edit
-                </Button>
-              </TableCell>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sources</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              {/* <TableHead>Actions</TableHead> */}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sources.map((tag) => (
+              <TableRow key={tag.id}>
+                <TableCell>{tag.name}</TableCell>
+                {/* <TableCell>
+                  <Button onClick={() => handleEditTag(tag)} size="sm">
+                    Edit
+                  </Button>
+                </TableCell> */}
+              </TableRow>
+            ))}
+          </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
 
       {/* Dialog (Modal replacement) */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
