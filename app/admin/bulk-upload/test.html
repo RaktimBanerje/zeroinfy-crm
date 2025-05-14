@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capital Compounding Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f5f5f5;
+    }
+    h2 {
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, input {
+      display: block;
+      margin: 10px 0;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: right;
+    }
+    th {
+      background: #eee;
+    }
+    canvas {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Capital Compounding Calculator</h2>
+
+  <label>Initial Capital (₹):</label>
+  <input type="number" id="initialCapital" value="350000">
+
+  <label>Monthly Growth Target (%):</label>
+  <input type="number" id="monthlyTarget" value="20">
+
+  <label>Trading Sessions per Month:</label>
+  <input type="number" id="sessionsPerMonth" value="20">
+
+  <label>Number of Months:</label>
+  <input type="number" id="numMonths" value="12">
+
+  <button onclick="calculateGrowth()">Calculate</button>
+
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Opening Balance</th>
+        <th>Target Closing Balance</th>
+        <th>Target Amount</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <canvas id="growthChart" height="100"></canvas>
+</div>
+
+<script>
+function formatINR(amount) {
+  if (amount >= 1e7) return `₹${(amount / 1e7).toFixed(2)}Cr`;
+  if (amount >= 1e5) return `₹${(amount / 1e5).toFixed(2)}L`;
+  if (amount >= 1e3) return `₹${(amount / 1e3).toFixed(2)}K`;
+  return `₹${amount.toFixed(2)}`;
+}
+
+function calculateGrowth() {
+  const capital = parseFloat(document.getElementById("initialCapital").value);
+  const monthlyTarget = parseFloat(document.getElementById("monthlyTarget").value);
+  const sessions = parseInt(document.getElementById("sessionsPerMonth").value);
+  const months = parseInt(document.getElementById("numMonths").value);
+
+  const tbody = document.querySelector("#resultsTable tbody");
+  tbody.innerHTML = "";
+
+  const monthlyRate = monthlyTarget / 100;
+  const sessionRate = Math.pow(1 + monthlyRate, 1 / sessions) - 1;
+
+  let opening = capital;
+  const labels = [], data = [];
+
+  for (let month = 1; month <= months; month++) {
+    const closing = opening * Math.pow(1 + sessionRate, sessions);
+    const target = closing - opening;
+
+    labels.push("Month " + month);
+    data.push(closing);
+
+    const row = `<tr>
+      <td style="text-align: center;">${month}</td>
+      <td>${formatINR(opening)}</td>
+      <td>${formatINR(closing)}</td>
+      <td>${formatINR(target)}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+
+    opening = closing;
+  }
+
+  drawChart(labels, data);
+}
+
+function drawChart(labels, data) {
+  const ctx = document.getElementById("growthChart").getContext("2d");
+  if (window.growthChart) {
+    window.growthChart.destroy();
+  }
+  window.growthChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Capital Growth",
+        data: data,
+        borderColor: "#28a745",
+        backgroundColor: "rgba(40, 167, 69, 0.1)",
+        borderWidth: 2,
+        fill: true,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: value => formatINR(value)
+          }
+        }
+      }
+    }
+  });
+}
+</script>
+
+</body>
+</html>

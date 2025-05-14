@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-
+import { FilterDropdown } from "@/app/components/FilterDropdown";
 
 const CallDetailsPage = () => {
   const router = useRouter();
@@ -23,8 +23,15 @@ const CallDetailsPage = () => {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [availableTags, setAvailableTags] = useState([]); // Store available tags
-  const [selectedTags, setSelectedTags] = useState([]); // Store selected tags to update
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  const [termFilters, setTermFilters] = useState([]);
+  const [courseFilters, setCourseFilters] = useState([]);
+  const [subjectFilters, setSubjectFilters] = useState([]);
+  const [facultyFilters, setFacultyFilters] = useState([]);
+  const [customTag1Filters, setCustomTag1Filters] = useState([]);
+  const [customTag2Filters, setCustomTag2Filters] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,9 +40,8 @@ const CallDetailsPage = () => {
       const resLead = await fetch(`https://zeroinfy.thinksurfmedia.in/items/leads/${id}`);
       const leadData = await resLead.json();
       setCustomer(leadData.data);
-
-      console.log("Customer")
-      console.log(leadData.data)
+      setAvailableTags(leadData.data.tags || []);
+      setSelectedTags(leadData.data.tags || []);
 
       const resLevels = await fetch(`https://zeroinfy.thinksurfmedia.in/items/followup_levels`);
       const levelsData = await resLevels.json();
@@ -50,11 +56,6 @@ const CallDetailsPage = () => {
         )
       );
       setInteractions(allInteractions.map((item) => item.data));
-
-      setAvailableTags(leadData.data.tags || []);
-
-      // Set the initial selected tags to the ones the lead already has
-      setSelectedTags(leadData.data.tags || []);
     };
 
     fetchData();
@@ -69,7 +70,6 @@ const CallDetailsPage = () => {
     try {
       const leadId = customer.id;
 
-      // 1. Create new interaction
       const interactionRes = await fetch(`https://zeroinfy.thinksurfmedia.in/items/interactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,11 +83,9 @@ const CallDetailsPage = () => {
       const newInteraction = await interactionRes.json();
       const newInteractionId = newInteraction.data.id;
 
-      // 2. Format interaction list
       const existingInteractions = customer.interactions || [];
       const updatedInteractionList = [...existingInteractions, { interaction_id: newInteractionId }];
 
-      // 3. Update lead
       await fetch(`https://zeroinfy.thinksurfmedia.in/items/leads/${leadId}`, {
         method: "PATCH",
         headers: {
@@ -98,18 +96,16 @@ const CallDetailsPage = () => {
           followup_level: followUpLevel,
           status: callStatus,
           interactions: updatedInteractionList,
-          next_followup_date: nextFollowUpDate
+          next_followup_date: nextFollowUpDate,
         }),
       });
 
-      // 4. Fetch full interaction detail and add to state
       const newDetail = await fetch(
         `https://zeroinfy.thinksurfmedia.in/items/interactions/${newInteractionId}`
       ).then((res) => res.json());
 
       setInteractions((prev) => [...prev, newDetail.data]);
 
-      // Reset form
       setFollowUpLevel("");
       setNextFollowUpDate("");
       setNotes("");
@@ -123,7 +119,18 @@ const CallDetailsPage = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     const leadId = customer.id;
-  
+    
+    const allTags = [
+      ...termFilters,
+      ...courseFilters,
+      ...subjectFilters,
+      ...facultyFilters,
+      ...customTag1Filters,
+      ...customTag2Filters,
+    ];
+    
+    // const mergedTags = [...new Set([...allTags, ...customer.tags])];
+    
     try {
       const res = await fetch(`https://zeroinfy.thinksurfmedia.in/items/leads/${leadId}`, {
         method: "PATCH",
@@ -135,30 +142,22 @@ const CallDetailsPage = () => {
           name: customer.name,
           email: customer.email,
           phone: customer.phone,
+          query: customer.query,
+          tags: allTags,
         }),
       });
-  
+
       if (!res.ok) {
         const errorData = await res.json();
         console.error("Failed to update:", errorData);
       } else {
         console.log("Update successful");
+        setSelectedTags(allTags);
       }
 
-      setIsEditing(false)
+      setIsEditing(false);
     } catch (err) {
       console.error("Error in handleSave:", err);
-    }
-  };
-
-
-
-  // Toggle selected tags when user checks/unchecks a tag
-  const toggleTag = (tag) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
     }
   };
 
@@ -176,7 +175,7 @@ const CallDetailsPage = () => {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           <Card style={{ backgroundColor: "#dbeafe" }}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle>Customer Information</CardTitle>
               <div className="flex gap-2">
                 {isEditing ? (
@@ -185,8 +184,8 @@ const CallDetailsPage = () => {
                       <X className="mr-2 h-4 w-4" />
                       Cancel
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleSave} disabled={isSubmitting}>
-                      {isSubmitting ? "Saving..." : "Save"}
+                    <Button variant="outline" size="sm" onClick={handleSave}>
+                      Save
                     </Button>
                   </>
                 ) : (
@@ -208,30 +207,14 @@ const CallDetailsPage = () => {
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">Contact Information</h4>
                   {isEditing ? (
                     <>
-                      <Input
-                        label="Name"
-                        value={customer.name}
-                        onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                      />
-                      <Input
-                        label="Email"
-                        value={customer.email}
-                        onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                      />
-                      <Input
-                        label="Phone"
-                        value={customer.phone}
-                        onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                      />
+                      <Input value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} />
+                      <Input value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
+                      <Input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
                     </>
                   ) : (
                     <>
-                      <p className="text-sm">
-                        <strong>Email:</strong> {customer.email}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Phone:</strong> {customer.phone}
-                      </p>
+                      <p><strong>Email:</strong> {customer.email}</p>
+                      <p><strong>Phone:</strong> {customer.phone}</p>
                     </>
                   )}
                 </div>
@@ -239,38 +222,51 @@ const CallDetailsPage = () => {
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">Query</h4>
                   {isEditing ? (
-                    <Textarea
-                      value={customer.query}
-                      onChange={(e) => setCustomer({ ...customer, query: e.target.value })}
-                    />
+                    <Textarea value={customer.query} onChange={(e) => setCustomer({ ...customer, query: e.target.value })} />
                   ) : (
-                    <p className="text-sm">{customer.query}</p>
+                    <p>{customer.query}</p>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Tags</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant={selectedTags.includes(tag) ? "filled" : "outline"}
-                        onClick={() => toggleTag(tag)}
-                        className={`cursor-pointer ${selectedTags.includes(tag) ? "bg-black text-white" : ""}`}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Tags</h4>
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <FilterDropdown label="Term" collection="terms" tagFilters={termFilters.length > 0 ? termFilters : customer.tags} toggleTagFilter={(tag) =>
+                        setTermFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                      <FilterDropdown label="Course" collection="courses" tagFilters={courseFilters.length > 0 ? courseFilters : customer.tags} toggleTagFilter={(tag) =>
+                        setCourseFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                      <FilterDropdown label="Subject" collection="subjects" tagFilters={subjectFilters.length > 0 ? subjectFilters : customer.tags} toggleTagFilter={(tag) =>
+                        setSubjectFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                      <FilterDropdown label="Faculty" collection="faculties" tagFilters={facultyFilters.length > 0 ? facultyFilters : customer.tags} toggleTagFilter={(tag) =>
+                        setFacultyFilters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                      <FilterDropdown label="Custom Tag 1" collection="custom_tags_one" tagFilters={customTag1Filters.length > 0 ? customTag1Filters : customer.tags} toggleTagFilter={(tag) =>
+                        setCustomTag1Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                      <FilterDropdown label="Custom Tag 2" collection="custom_tags_two" tagFilters={customTag2Filters.length > 0 ? customTag2Filters : customer.tags} toggleTagFilter={(tag) =>
+                        setCustomTag2Filters((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      } />
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="bg-black text-white border border-black-300">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card style={{ backgroundColor: "#fef9c3" }}>
-            <CardHeader>
-              <CardTitle>Interaction History</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Interaction History</CardTitle></CardHeader>
             <CardContent>
               {interactions.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">No interactions yet</div>
@@ -296,25 +292,16 @@ const CallDetailsPage = () => {
 
         <div>
           <Card className="sticky top-6" style={{ backgroundColor: "#dcfce7" }}>
-            <CardHeader>
-              <CardTitle>Add Interaction</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Add Interaction</CardTitle></CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Call Status</label>
-                  <Select
-                    value={callStatus || customer.status || "New"}
-                    onValueChange={setCallStatus}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Call Status" />
-                    </SelectTrigger>
+                  <Select value={callStatus || customer.status || "New"} onValueChange={setCallStatus}>
+                    <SelectTrigger><SelectValue placeholder="Select Call Status" /></SelectTrigger>
                     <SelectContent>
                       {["New", "In Progress", "Close", "Sold"].map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -322,18 +309,11 @@ const CallDetailsPage = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Follow-Up Level</label>
-                  <Select
-                    value={followUpLevel || customer.followup_level || ""}
-                    onValueChange={setFollowUpLevel}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Follow-Up Level" />
-                    </SelectTrigger>
+                  <Select value={followUpLevel || customer.followup_level || ""} onValueChange={setFollowUpLevel}>
+                    <SelectTrigger><SelectValue placeholder="Select Follow-Up Level" /></SelectTrigger>
                     <SelectContent>
                       {followUpLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -341,20 +321,12 @@ const CallDetailsPage = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Next Follow-Up Date</label>
-                  <Input
-                    type="date"
-                    value={nextFollowUpDate}
-                    onChange={(e) => setNextFollowUpDate(e.target.value)}
-                  />
+                  <Input type="date" value={nextFollowUpDate} onChange={(e) => setNextFollowUpDate(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Notes</label>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add notes here..."
-                  />
+                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes here..." />
                 </div>
 
                 <div className="flex justify-end">

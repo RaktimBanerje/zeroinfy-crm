@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 
 export default function TagManagement() {
   const { toast } = useToast()
@@ -103,12 +103,26 @@ export default function TagManagement() {
   }
 
   const handleDeleteTag = async (tag: any, category: string) => {
+    console.log(tag);
+  
     try {
-      await directus.items(category).deleteOne(tag.id)
-      toast({ title: "Deleted", description: "Tag deleted successfully", variant: "success" })
-      fetchData(category)
+      const response = await fetch(`https://zeroinfy.thinksurfmedia.in/items/${category}/${tag.id}`, {
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to delete tag: ${response.statusText}`);
+      }
+  
+      toast({ title: "Deleted", description: "Tag deleted successfully", variant: "success" });
+      fetchData(category);
     } catch (error) {
-      toast({ title: "Error", description: "Failed to delete tag", variant: "destructive" })
+      console.error(error);
+      toast({ title: "Error", description: "Failed to delete tag", variant: "destructive" });
     }
   }
 
@@ -186,11 +200,11 @@ export default function TagManagement() {
           <TableRow key={tag.id}>
             <TableCell>{tag.name}</TableCell>
             <TableCell className="space-x-2">
-              <Button size="sm" onClick={() => handleEditTag(tag, category)}>
-                Edit
+              <Button variant="outline" size="sm" onClick={() => handleEditTag(tag, category)}>
+                <Pencil className="w-4 h-4" />
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleDeleteTag(tag, category)}>
-                Delete
+              <Button variant="destructive" size="sm" onClick={() => handleDeleteTag(tag, category)}>
+                <Trash2 className="w-4 h-4" />
               </Button>
             </TableCell>
           </TableRow>
