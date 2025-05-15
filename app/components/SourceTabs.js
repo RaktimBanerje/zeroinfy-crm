@@ -33,13 +33,14 @@ const SourceTabs = ({ activeSourceTab, setActiveSourceTab }) => {
       <Button
         size="sm"
         onClick={() => setActiveSourceTab("all")}
-        className="relative min-w-[120px] flex justify-between items-center px-4"
+        className="relative flex justify-between items-center px-4"
         style={{
           backgroundColor: "#e24aa3cc",
           color: "black",
           border: "none",
           outline: "none",
           boxShadow: "none",
+          width: "200px", // Directly setting width here
         }}
       >
         <span className="flex items-center text-white">

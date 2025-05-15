@@ -2,109 +2,188 @@
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState, useEffect } from "react"
-import directus from "@/lib/directus"
-import { readItems } from "@directus/sdk"
+import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
+import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { DialogDescription } from "@radix-ui/react-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 export default function UserManagement() {
   const { toast } = useToast()
-  const [users, setUsers] = useState([])
+  const [teams, setTeams] = useState<any[]>([])
   const [openModal, setOpenModal] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [userName, setUserName] = useState("")
-  const [userEmail, setUserEmail] = useState("")
-  const [userPhone, setUserPhone] = useState("")
-  const [isNewUser, setIsNewUser] = useState(false) // Flag to differentiate between creating or editing a user
+  const [currentTeam, setCurrentTeam] = useState<any>(null)
+  const [teamName, setTeamName] = useState("")
+  const [teamEmail, setTeamEmail] = useState("")
+  const [teamPhone, setTeamPhone] = useState("")
+  const [teamPassword, setTeamPassword] = useState("")
+  const [teamRole, setTeamRole] = useState("staff") // Default to staff role
+  const [isActive, setIsActive] = useState(true) // Default to active
+  const [isNewTeam, setIsNewTeam] = useState(false)
+  const [roles, setRoles] = useState(['Admin', 'Team'])
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTeams = async () => {
       try {
-        const response = await fetch("https://zeroinfy.thinksurfmedia.in/users", {
+        const response = await fetch("https://zeroinfy.thinksurfmedia.in/items/teams", {
           method: "GET",
           headers: {
             "Authorization": `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`,
           },
-        });
-        
-        const data = await response.json();
+        })
 
-        console.log(data)
-        setUsers(data.data)
+        const data = await response.json()
+        setTeams(data.data) // Assuming `data` is the list of teams
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to fetch users.",
+          description: "Failed to fetch teams.",
           variant: "destructive",
         })
       }
     }
 
-    fetchUsers()
-  }, [])  // Only fetch data once on component mount
+    fetchTeams()
+  }, []) // Empty dependency array to run only once when component mounts
 
-  const handleEditUser = (user: any) => {
-    setCurrentUser(user)
-    setUserName(user.name)
-    setUserEmail(user.email)
-    setUserPhone(user.phone)
-    setIsNewUser(false)  // Setting flag to false for editing
-    setOpenModal(true)   // Open modal for editing
+  const handleEditTeam = (team: any) => {
+    setCurrentTeam(team)
+    setTeamName(team.name)
+    setTeamEmail(team.email)
+    setTeamPhone(team.phone)
+    setTeamPassword("") // Password should be left empty when editing
+    setTeamRole(team.role || "staff") // Set the role
+    setIsActive(team.status === "active") // Set the active status
+    setIsNewTeam(false)
+    setOpenModal(true)
   }
 
-  const handleSaveUser = async () => {
+  const handleSaveTeam = async () => {
     try {
-      if (isNewUser) {
-        // Create new user
-        await directus.request(readItems("users"), { method: 'POST', body: { name: userName, email: userEmail, phone: userPhone } })
-        toast({ title: "Success", description: "User added successfully", variant: "success" })
-      } else {
-        // Update existing user
-        await directus.request(readItems("users"), { method: 'PATCH', body: { id: currentUser.id, name: userName, email: userEmail, phone: userPhone } })
-        toast({ title: "Success", description: "User updated successfully", variant: "success" })
+      const teamPayload = {
+        name: teamName,
+        email: teamEmail,
+        phone: teamPhone,
+        password: teamPassword, // Password
+        role: teamRole, // Role
+        status: isActive ? "active" : "inactive", // Active status
       }
-      setOpenModal(false)  // Close modal
-      setUserName("")  // Clear form
-      setUserEmail("")  // Clear form
-      setUserPhone("")  // Clear form
-      setCurrentUser(null)  // Clear current user
+
+      const apiUrl = `https://zeroinfy.thinksurfmedia.in/items/teams`
+
+      let response;
+
+      if (isNewTeam) {
+        // Create new team using POST request
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`,
+          },
+          body: JSON.stringify(teamPayload),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to create the team")
+        }
+
+        toast({
+          title: "Success",
+          description: "Team added successfully",
+          variant: "success",
+        })
+      } else {
+        // Update existing team using PATCH request
+        response = await fetch(`https://zeroinfy.thinksurfmedia.in/items/teams/${currentTeam.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`, // Add token if required
+          },
+          body: JSON.stringify(teamPayload),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to update the team")
+        }
+
+        const fetchTeams = async () => {
+          try {
+            const response = await fetch("https://zeroinfy.thinksurfmedia.in/items/teams", {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`,
+              },
+            })
+
+            const data = await response.json()
+            setTeams(data.data) // Assuming `data` is the list of teams
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to fetch teams.",
+              variant: "destructive",
+            })
+          }
+        }
+
+        fetchTeams()
+
+        toast({
+          title: "Success",
+          description: "Team updated successfully",
+          variant: "success",
+        })
+      }
+
+      setOpenModal(false)
+      setTeamName("")
+      setTeamEmail("")
+      setTeamPhone("")
+      setTeamPassword("")
+      setCurrentTeam(null)
+
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save the user.",
+        description: error.message || "Failed to save the team.",
         variant: "destructive",
       })
     }
   }
 
-  const handleCreateNewUser = () => {
-    setUserName("")
-    setUserEmail("")
-    setUserPhone("")
-    setIsNewUser(true)  // Flag for creating new user
-    setOpenModal(true)  // Open modal for creating a new user
+  const handleCreateNewTeam = () => {
+    setTeamName("")
+    setTeamEmail("")
+    setTeamPhone("")
+    setTeamPassword("")
+    setTeamRole("staff")
+    setIsActive(true)
+    setIsNewTeam(true)
+    setOpenModal(true)
   }
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      {/* Users Table */}
+      {/* Teams Table */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center flex-wrap gap-4">
-            <CardTitle>User Management</CardTitle>
+            <CardTitle>Team Management</CardTitle>
             <Button
-              onClick={handleCreateNewUser}
+              onClick={handleCreateNewTeam}
               variant="outline"
               size="sm"
               className="bg-black text-white hover:bg-gray-800"
             >
-              <Plus className="h-4 w-4" />New User
+              <Plus className="h-4 w-4" /> New Team
             </Button>
           </div>
         </CardHeader>
@@ -114,16 +193,28 @@ export default function UserManagement() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Password</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.first_name} {user.last_name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+              {teams.map((team) => (
+                <TableRow key={team.id}>
+                  <TableCell>{team.name}</TableCell>
+                  <TableCell>{team.email}</TableCell>
+                  <TableCell>{team.phone}</TableCell>
                   <TableCell>
-                    <Button onClick={() => handleEditUser(user)} size="sm">
+                    <Badge color="primary">{team.role}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge color={team.status === 'active' ? 'success' : 'error'}>{team.status}</Badge>
+                  </TableCell>
+                  <TableCell>{team.password}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleEditTeam(team)} size="sm">
                       Edit
                     </Button>
                   </TableCell>
@@ -133,42 +224,80 @@ export default function UserManagement() {
           </Table>
         </CardContent>
       </Card>
-      
+
       {/* Dialog (Modal replacement) */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isNewUser ? "Create New User" : "Edit User"}</DialogTitle>
+            <DialogTitle>{isNewTeam ? "Create New Team" : "Edit Team"}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            <Label htmlFor="userName">User Name</Label>
+            <Label htmlFor="teamName">Team Name</Label>
             <Input
-              id="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Enter user name"
+              id="teamName"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              placeholder="Enter team name"
             />
-            <Label htmlFor="userEmail" className="mt-4">Email</Label>
+            <Label htmlFor="teamEmail" className="mt-4">Email</Label>
             <Input
-              id="userEmail"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="Enter user email"
+              id="teamEmail"
+              value={teamEmail}
+              onChange={(e) => setTeamEmail(e.target.value)}
+              placeholder="Enter team email"
             />
-            <Label htmlFor="userPhone" className="mt-4">Phone</Label>
+            <Label htmlFor="teamPhone" className="mt-4">Phone</Label>
             <Input
-              id="userPhone"
-              value={userPhone}
-              onChange={(e) => setUserPhone(e.target.value)}
-              placeholder="Enter user phone"
+              id="teamPhone"
+              value={teamPhone}
+              onChange={(e) => setTeamPhone(e.target.value)}
+              placeholder="Enter team phone"
             />
+            <Label htmlFor="teamPassword" className="mt-4">Password</Label>
+            <Input
+              id="teamPassword"
+              type="password"
+              value={teamPassword}
+              onChange={(e) => setTeamPassword(e.target.value)}
+              placeholder="Enter team password"
+            />
+
+            {/* Role Selection with Dynamic Options */}
+            <Label htmlFor="teamRole" className="mt-4">Role</Label>
+            <Select
+              id="teamRole"
+              value={teamRole}
+              onValueChange={(value) => setTeamRole(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Active Team Checkbox */}
+            <Label htmlFor="isActive" className="mt-4">Activate Team</Label>
+            <Checkbox
+              id="isActive"
+              checked={isActive}
+              onCheckedChange={(checked) => setIsActive(checked === true)}
+            >
+              Active
+            </Checkbox>
           </DialogDescription>
+
           <DialogFooter>
             <Button variant="secondary" onClick={() => setOpenModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveUser}>
-              {isNewUser ? "Create" : "Save"} User
+            <Button onClick={handleSaveTeam}>
+              {isNewTeam ? "Create" : "Save"} Team
             </Button>
           </DialogFooter>
         </DialogContent>

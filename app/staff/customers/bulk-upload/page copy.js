@@ -58,14 +58,6 @@ export default function BulkUploadPage() {
         for (let row of csvData) {
           const fallbackFollowup = row.Followup && row.Followup.trim() !== "" ? row.Followup.trim() : "Fresh Call";
           
-          console.log([
-              ...(row.Source ? [row.Source.trim()] : []),
-              fallbackFollowup,
-              ...(typeof row.Tags === "string"
-                ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
-                : [])
-          ])
-
           const leadData = {
             name: row.Name,
             email: row.Email,
@@ -139,7 +131,7 @@ export default function BulkUploadPage() {
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="mb-6">
-        <Link href="/admin/dashboard">
+        <Link href="/staff/dashboard">
           <Button variant="outline" className="mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Customers

@@ -203,11 +203,11 @@ export default function NewCallsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex overflow-x-auto pb-2">
-            <FollowupLevelTabs activeTab={activeTab} setActiveTab={setActiveTab} count={0} />
+            <FollowupLevelTabs activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
 
           <div className="flex overflow-x-auto pb-2">
-            <SourceTabs activeSourceTab={sourceFilters} setActiveSourceTab={setSourceFilters} count={0} />
+            <SourceTabs activeSourceTab={sourceFilters} setActiveSourceTab={setSourceFilters} />
           </div>
 
           <div className="mb-4 flex items-center justify-between gap-4 sticky top-0 bg-background z-10 py-2">

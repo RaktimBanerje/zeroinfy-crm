@@ -138,7 +138,7 @@ export default function TagManagement() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`, // Add token if required
+            "Authorization": `Bearer HVmL8gc6vbrZV_uCI1sNYptBkxdEABfu`, 
           },
           body: JSON.stringify(payload),
         })

@@ -58,6 +58,14 @@ export default function BulkUploadPage() {
         for (let row of csvData) {
           const fallbackFollowup = row.Followup && row.Followup.trim() !== "" ? row.Followup.trim() : "Fresh Call";
           
+          console.log([
+              ...(row.Source ? [row.Source.trim()] : []),
+              fallbackFollowup,
+              ...(typeof row.Tags === "string"
+                ? row.Tags.split(",").map(tag => tag.trim()).filter(Boolean)
+                : [])
+          ])
+
           const leadData = {
             name: row.Name,
             email: row.Email,
