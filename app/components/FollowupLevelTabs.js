@@ -48,10 +48,6 @@ const FollowupLevelTabs = ({ activeTab, setActiveTab }) => {
       >
         <span className="flex items-center text-white">
           All Calls
-          <span className="ml-2 bg-white text-black text-xs font-semibold px-2 py-0.5 rounded-full">
-            {/* Assuming you want to add a count for "All Calls" */}
-            {tabs.reduce((sum) => sum + 1, 0)} {/* Example count */}
-          </span>
         </span>
         {renderArrow(activeTab === "all")}
       </Button>

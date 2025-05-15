@@ -46,6 +46,7 @@ export default function AdminDashboard() {
     assigned: 0,
     pending: 0,
     completed: 0,
+    sold: 0,
   })
 
   const fetchLeads = async () => {
@@ -62,15 +63,15 @@ export default function AdminDashboard() {
     const total = leads.length
     const assigned = leads.filter(l => l.status === "New").length
     const pending = leads.filter(l => l.status === "In Progress").length
-    const completed = leads.filter(l => l.status === "Closed" || l.status === "Sold").length
+    const completed = leads.filter(l => l.status === "Close").length
+    const sold = leads.filter(l => l.status === "Sold").length
 
-    setKpiData({ total, assigned, pending, completed })
+    setKpiData({ total, assigned, pending, completed, sold })
 
-    // Pie Chart Data: Calculating counts of each status
     const statusCounts = {
       "New": leads.filter(l => l.status === "New").length,
       "In Progress": leads.filter(l => l.status === "In Progress").length,
-      "Closed": leads.filter(l => l.status === "Closed").length,
+      "Closed": leads.filter(l => l.status === "Close").length,
       "Sold": leads.filter(l => l.status === "Sold").length,
     }
 
@@ -125,13 +126,13 @@ export default function AdminDashboard() {
 
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+        {/* <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
           <CardHeader><CardTitle>Total Customers</CardTitle></CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-800 dark:text-blue-300">{kpiData.total}</div>
             <Users className="h-4 w-4 mt-2 text-blue-600 dark:text-blue-400" />
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 border-indigo-200 dark:border-indigo-800">
           <CardHeader><CardTitle>New Calls</CardTitle></CardHeader>
@@ -148,9 +149,16 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
-          <CardHeader><CardTitle>Completed</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Close</CardTitle></CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-800 dark:text-green-300">{kpiData.completed}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+          <CardHeader><CardTitle>Sold</CardTitle></CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-800 dark:text-orange-300">{kpiData.sold}</div>
           </CardContent>
         </Card>
       </div>

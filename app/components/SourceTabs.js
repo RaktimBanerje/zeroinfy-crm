@@ -33,7 +33,7 @@ const SourceTabs = ({ activeSourceTab, setActiveSourceTab }) => {
       <Button
         size="sm"
         onClick={() => setActiveSourceTab("all")}
-        className="relative flex justify-between items-center px-4"
+        className="relative flex justify-center items-center px-4"
         style={{
           backgroundColor: "#e24aa3cc",
           color: "black",
@@ -45,9 +45,6 @@ const SourceTabs = ({ activeSourceTab, setActiveSourceTab }) => {
       >
         <span className="flex items-center text-white">
           All Sources
-          <span className="ml-2 bg-white text-black text-xs font-semibold px-2 py-0.5 rounded-full">
-            {tags.reduce((sum, tag) => sum + (tag.count || 0), 0)}
-          </span>
         </span>
         {renderArrow(activeSourceTab === "all")}
       </Button>
